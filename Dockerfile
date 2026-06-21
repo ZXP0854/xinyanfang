@@ -1,4 +1,4 @@
-FROM nginx:alpine
+FROM nginx:latest
 
 # 复制自定义 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
