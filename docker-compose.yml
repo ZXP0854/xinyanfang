@@ -1,0 +1,21 @@
+services:
+  web:
+    build: .
+    container_name: xinyanfang-web
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./
+          target: /usr/share/nginx/html
+          ignore:
+            - .git/
+            - .idea/
+            - .kiro/
+            - "*.docx"
+            - Dockerfile
+            - docker-compose.yml
+            - .dockerignore
+            - .gitignore

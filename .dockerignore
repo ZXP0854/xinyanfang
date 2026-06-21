@@ -1,0 +1,22 @@
+# IDE 配置
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker 自身
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Kiro 规范文件
+.kiro/
+
+# Word 文档
+*.docx

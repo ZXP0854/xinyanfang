@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心研坊 · 首页</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="top-nav">
+    <a href="home.html" class="logo"><i class="fa-solid fa-brain"></i> 心研坊</a>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="搜索教程、资源..." autocomplete="off">
+        <button onclick="handleSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+    <button class="nav-toggle" onclick="toggleNav()"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-links" id="navLinks">
+        <a href="home.html">首页</a>
+        <a href="workflow.html">掌握科研流程</a>
+        <a href="aesthetics.html">提升科研审美</a>
+        <a href="resources.html">获取科研资源</a>
+        <a href="about.html">关于</a>
+    </div>
+</div>
+
+<!-- 来自 mwq 的 Hero 卡片 -->
+<section class="hero">
+    <h1 class="hero-title">心研坊 · MindLab</h1>
+    <p class="hero-subtitle">为你编织AI的心网</p>
+    <p class="hero-intro">
+        由心理学专业本科学生搭建，期望为心理学专业学生科研服务的，综合科研全流程教学、科研审美提升、科研资源整合的网站
+    </p>
+    <div class="hero-divider"></div>
+</section>
+
+<!-- 来自 mwq 的“科研流程”题头文字 -->
+<div class="section-header">
+    <a class="section-title" href="workflow.html">心理学科研全流程链条</a>
+    <p class="section-desc">点击标题或流程图节点，进入科研全流程教学</p>
+</div>
+
+<!-- 来自 txh 的圆环 -->
+<div class="container" style="padding-top: 0;">
+    <div class="ring-container" id="ringNavContainer"></div>
+</div>
+
+<!-- 来自 mwq 的“提升科研审美”预览板块 -->
+<div class="section-header">
+    <a class="section-title" href="aesthetics.html">提升科研审美</a>
+    <p class="section-desc">精选前沿文章与写作拆解教学</p>
+</div>
+<div class="card-grid aesthetics-teaser">
+    <div class="card" onclick="location.href='aesthetics.html'">
+        <div class="card-img"><i class="fa-solid fa-file-lines"></i></div>
+        <div class="card-body"><h4>实验设计之美</h4><p>探索巧妙实验设计背后的逻辑与创新思维</p></div>
+    </div>
+    <div class="card" onclick="location.href='aesthetics.html'">
+        <div class="card-img"><i class="fa-solid fa-chart-line"></i></div>
+        <div class="card-body"><h4>数据可视化范例</h4><p>优秀论文中的图表设计与视觉呈现技巧</p></div>
+    </div>
+    <div class="card" onclick="location.href='aesthetics.html'">
+        <div class="card-img"><i class="fa-solid fa-pen-fancy"></i></div>
+        <div class="card-body"><h4>学术写作精析</h4><p>拆解高水平论文的写作结构与表达艺术</p></div>
+    </div>
+    <div class="card" onclick="location.href='aesthetics.html'">
+        <div class="card-img"><i class="fa-solid fa-lightbulb"></i></div>
+        <div class="card-body"><h4>理论框架构建</h4><p>学习如何构建扎实且有创新性的理论框架</p></div>
+    </div>
+</div>
+
+<!-- 来自 mwq 的“获取科研资源”预览板块 -->
+<div class="section-header">
+    <a class="section-title" href="resources.html">获取科研资源</a>
+    <p class="section-desc">汇聚开放资源，助力科研每一步</p>
+</div>
+<div class="resource-teaser-grid">
+    <div class="resource-teaser-card" onclick="location.href='resources.html'">
+        <div class="rsrc-icon"><i class="fa-solid fa-book-open"></i></div>
+        <h4>文献与知识库</h4><p>学术文献检索与知识管理</p>
+    </div>
+    <div class="resource-teaser-card" onclick="location.href='resources.html'">
+        <div class="rsrc-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+        <h4>工具与软件库</h4><p>科研工具推荐与使用指南</p>
+    </div>
+    <div class="resource-teaser-card" onclick="location.href='resources.html'">
+        <div class="rsrc-icon"><i class="fa-solid fa-ruler"></i></div>
+        <h4>量表与测量资源</h4><p>常用心理学量表与测量工具</p>
+    </div>
+    <div class="resource-teaser-card" onclick="location.href='resources.html'">
+        <div class="rsrc-icon"><i class="fa-solid fa-database"></i></div>
+        <h4>公开数据集</h4><p>可复用的公开研究数据集</p>
+    </div>
+</div>
+
+<!-- 保留 txh 原有的关于心研坊卡片（可选） -->
+<div class="container">
+    <div class="card section">
+        <h3 class="serif serif-xs" style="margin-bottom: 16px;">关于心研坊</h3>
+        <p style="margin-bottom: 12px;">心研坊专为心理学专业本科生与研究生设计，系统整合研究方法全流程：从发现研究兴趣、追踪前沿文献，到研究设计、取样、数据分析，最后完成研究报告的撰写。</p>
+        <p>网站内置树状导览图、工具推荐、优质论文库及资源合集，助力您高效完成科研项目。</p>
+    </div>
+</div>
+
+<footer>
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>心研坊 · 心理学研究方法辅助平台</span>
+        <span>面向应用心理学本硕 · 开放共建中</span>
+    </div>
+</footer>
+
+<script src="js/common.js"></script>
+<script>
+    createRingSVG('ringNavContainer');
+</script>
+</body>
+</html>
