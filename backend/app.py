@@ -61,10 +61,20 @@ def create_app(config_name: str = None) -> Flask:
 
 
 def init_db(app: Flask):
-    """创建数据库表并初始化管理员账号"""
+    """创建数据库表、执行迁移并初始化管理员账号"""
     from models import db, User
     with app.app_context():
         db.create_all()
+
+        # 迁移：为已有 uploads 表添加 file_type 列（SQLite 兼容）
+        from sqlalchemy import text
+        try:
+            db.session.execute(
+                text("ALTER TABLE uploads ADD COLUMN file_type VARCHAR(20) DEFAULT 'document'")
+            )
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
 
         # 如果还没有管理员，创建默认账号
         if User.query.count() == 0:

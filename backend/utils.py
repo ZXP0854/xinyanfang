@@ -16,6 +16,7 @@ from PIL import Image
 
 ALLOWED_IMAGE_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'}
 ALLOWED_DOC_EXTENSIONS = {'pdf', 'doc', 'docx'}
+ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'ogg', 'mov'}
 
 # 文件幻数（magic bytes）验证，防止伪造 MIME
 _MAGIC_SIGNATURES = {
@@ -27,14 +28,20 @@ _MAGIC_SIGNATURES = {
     b'<svg': 'svg',
     b'%PDF': 'pdf',
 }
+_VIDEO_MAGIC_SIGNATURES = {
+    b'\x00\x00\x00': 'mp4',   # ftyp box at offset 4
+}
+
+
+_ALL_ALLOWED = ALLOWED_IMAGE_EXTENSIONS | ALLOWED_DOC_EXTENSIONS | ALLOWED_VIDEO_EXTENSIONS
 
 
 def allowed_file(filename: str, allowed_set: set = None) -> bool:
-    """检查文件扩展名是否允许"""
+    """检查文件扩展名是否允许（默认允许所有支持类型）"""
     if not filename or '.' not in filename:
         return False
     ext = filename.rsplit('.', 1)[1].lower()
-    allowed = allowed_set or ALLOWED_IMAGE_EXTENSIONS
+    allowed = allowed_set or _ALL_ALLOWED
     return ext in allowed
 
 
@@ -74,9 +81,11 @@ def save_upload(file) -> dict:
     filepath = os.path.join(upload_folder, unique_name)
     file.save(filepath)
 
-    # 如果是图片，生成缩略图
+    # 如果是图片，生成缩略图；视频和文档跳过
     thumbnail = None
+    file_type = 'document'
     if ext in ALLOWED_IMAGE_EXTENSIONS and ext != 'svg':
+        file_type = 'image'
         try:
             img = Image.open(filepath)
             img.thumbnail((800, 800), Image.LANCZOS)
@@ -85,7 +94,9 @@ def save_upload(file) -> dict:
             img.save(thumb_path, quality=85, optimize=True)
             thumbnail = thumb_name
         except Exception:
-            pass  # 缩略图生成失败不影响主流程
+            pass
+    elif ext in ALLOWED_VIDEO_EXTENSIONS:
+        file_type = 'video'
 
     file_size = os.path.getsize(filepath)
 
@@ -97,6 +108,7 @@ def save_upload(file) -> dict:
         'relative_path': f'static/uploads/{unique_name}',
         'size': file_size,
         'thumbnail': thumbnail,
+        'file_type': file_type,
         'mime_type': file.content_type or '',
     }
 

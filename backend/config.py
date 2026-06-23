@@ -17,10 +17,11 @@ class Config:
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
     # 上传文件配置
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+    MAX_CONTENT_LENGTH = 128 * 1024 * 1024  # 128MB（支持视频）
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
-    ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'ico', 'pdf', 'doc', 'docx'}
+    ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'ico', 'pdf', 'doc', 'docx', 'mp4', 'webm', 'ogg', 'mov'}
     ALLOWED_IMAGE_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'}
+    ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'ogg', 'mov'}
 
     # Redis（生产环境使用）
     REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')

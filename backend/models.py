@@ -137,6 +137,7 @@ class Upload(db.Model):
     original_name = db.Column(db.String(300), nullable=False)   # 原始文件名
     mime_type = db.Column(db.String(100), default='')
     file_size = db.Column(db.Integer, default=0)               # 字节
+    file_type = db.Column(db.String(20), default='document')   # 'image', 'video', 'document'
     relative_path = db.Column(db.String(500), default='')      # 相对路径
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -147,6 +148,7 @@ class Upload(db.Model):
             'original_name': self.original_name,
             'mime_type': self.mime_type,
             'file_size': self.file_size,
+            'file_type': self.file_type,
             'relative_path': self.relative_path,
             'url': f'/static/uploads/{self.filename}',
             'created_at': self.created_at.isoformat() if self.created_at else None,

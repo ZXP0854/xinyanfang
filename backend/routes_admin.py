@@ -369,6 +369,7 @@ def api_upload():
         original_name=result['original_name'],
         mime_type=result['mime_type'],
         file_size=result['size'],
+        file_type=result.get('file_type', 'document'),
         relative_path=result['relative_path'],
     )
     db.session.add(upload)
