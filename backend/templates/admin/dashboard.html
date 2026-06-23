@@ -1,0 +1,57 @@
+{% extends "admin/base.html" %}
+{% block title %}仪表盘 · 心研坊管理后台{% endblock %}
+{% block header %}仪表盘{% endblock %}
+{% block content %}
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="num">{{ counts.published_tutorials }} <span style="font-size:0.9rem;color:var(--muted);">/ {{ counts.tutorials }}</span></div>
+        <div class="label">教程内容</div>
+    </div>
+    <div class="stat-card">
+        <div class="num">{{ counts.resources }}</div>
+        <div class="label">资源链接</div>
+    </div>
+    <div class="stat-card">
+        <div class="num">{{ counts.cards }}</div>
+        <div class="label">审美卡片</div>
+    </div>
+    <div class="stat-card">
+        <div class="num">{{ counts.uploads }}</div>
+        <div class="label">上传文件</div>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom:16px;">快速操作</h3>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <a href="{{ url_for('admin.tutorial_edit') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> 新建教程</a>
+        <a href="{{ url_for('admin.resource_list') }}#new" class="btn btn-secondary"><i class="fa-solid fa-link"></i> 添加资源</a>
+        <a href="{{ url_for('admin.card_list') }}#new" class="btn btn-secondary"><i class="fa-solid fa-image"></i> 添加卡片</a>
+        <a href="{{ url_for('admin.upload_list') }}" class="btn btn-secondary"><i class="fa-solid fa-upload"></i> 上传文件</a>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom:16px;">最近操作</h3>
+    {% if logs %}
+    <table>
+        <thead><tr><th>时间</th><th>用户</th><th>操作</th><th>详情</th><th>IP</th></tr></thead>
+        <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{ log.created_at.strftime('%m-%d %H:%M') }}</td>
+            <td>{{ log.user_id or '-' }}</td>
+            <td>{{ log.action }}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ log.detail or '-' }}</td>
+            <td>{{ log.ip_address or '-' }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><i class="fa-solid fa-clock-rotate-left"></i>暂无操作记录</div>
+    {% endif %}
+</div>
+
+{% endblock %}

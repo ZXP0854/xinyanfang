@@ -30,6 +30,9 @@ body {
     --surface-dark-elevated: #252320;
     --on-dark: #faf9f5;
     --on-dark-soft: #a09d96;
+    --font-serif: Georgia, 'Times New Roman', Times, serif;
+    --text: #141413;
+    --text-light: #6c6a64;
 }
 .container { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
 .section { margin-bottom: 96px; }

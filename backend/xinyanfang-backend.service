@@ -1,0 +1,26 @@
+[Unit]
+Description=心研坊 Flask 后端服务
+After=network.target mysql.service redis.service
+
+[Service]
+Type=simple
+User=admin
+WorkingDirectory=/www/wwwroot/xinyanfang/backend
+Environment="FLASK_ENV=production"
+Environment="SECRET_KEY=<生成一个随机密钥>"
+Environment="JWT_SECRET_KEY=<生成另一个随机密钥>"
+ExecStart=/www/wwwroot/xinyanfang/backend/venv/bin/gunicorn \
+    --workers 2 \
+    --bind 127.0.0.1:5000 \
+    --timeout 120 \
+    --access-logfile /var/log/xinyanfang-access.log \
+    --error-logfile /var/log/xinyanfang-error.log \
+    --log-level info \
+    app:create_app
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

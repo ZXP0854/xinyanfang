@@ -1,0 +1,94 @@
+{% extends "admin/base.html" %}
+{% block title %}资源链接管理 · 心研坊管理后台{% endblock %}
+{% block header %}资源链接管理{% endblock %}
+{% block content %}
+
+<div class="card" style="margin-bottom:20px;" id="new">
+    <h3 style="margin-bottom:16px;">添加资源</h3>
+    <form id="resourceForm">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+            <div class="form-group">
+                <label for="r_module">所属模块 *</label>
+                <select id="r_module">
+                    <option value="文献与知识库">文献与知识库</option>
+                    <option value="工具与软件库">工具与软件库</option>
+                    <option value="量表与测量资源">量表与测量资源</option>
+                    <option value="公开数据集">公开数据集</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="r_name">资源名称 *</label>
+                <input type="text" id="r_name" placeholder="例如: PubMed — 生物医学文献检索" required>
+            </div>
+            <div class="form-group">
+                <label for="r_link_type">链接类型</label>
+                <select id="r_link_type">
+                    <option value="tutorial">教程（onclick="openTutorial(...)"）</option>
+                    <option value="external">外部链接（target="_blank"）</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="r_link_value">链接值 *</label>
+                <input type="text" id="r_link_value" placeholder="教程标题 或 https://外部网址" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> 添加</button>
+    </form>
+</div>
+
+<div class="card" style="padding:0;">
+    {% if resources %}
+    <table>
+        <thead><tr><th>模块</th><th>名称</th><th>类型</th><th>链接值</th><th>操作</th></tr></thead>
+        <tbody>
+        {% for r in resources %}
+        <tr>
+            <td><span class="badge badge-muted">{{ r.module }}</span></td>
+            <td>{{ r.name[:60] }}</td>
+            <td>{{ '教程' if r.link_type == 'tutorial' else '外链' }}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.link_value }}</td>
+            <td>
+                <div class="actions">
+                    <button onclick="deleteResource({{ r.id }})" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><i class="fa-solid fa-link"></i>还没有资源链接</div>
+    {% endif %}
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('resourceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        module: document.getElementById('r_module').value,
+        name: document.getElementById('r_name').value.trim(),
+        link_type: document.getElementById('r_link_type').value,
+        link_value: document.getElementById('r_link_value').value.trim(),
+    };
+    try {
+        const res = await fetch('/api/admin/resources', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (res.ok) { location.reload(); }
+        else { const d = await res.json(); alert('错误: ' + d.error); }
+    } catch(err) { alert('网络错误: ' + err.message); }
+});
+
+async function deleteResource(id) {
+    if (!confirm('确定要删除这个资源链接吗？')) return;
+    try {
+        const res = await fetch('/api/admin/resources/' + id, { method: 'DELETE' });
+        if (res.ok) { location.reload(); }
+    } catch(e) { alert('网络错误: ' + e.message); }
+}
+</script>
+{% endblock %}

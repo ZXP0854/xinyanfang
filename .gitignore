@@ -14,3 +14,13 @@ docker-compose.override.yml
 
 # Word 文档（不需要部署到服务器）
 *.docx
+
+# Flask 后端运行时文件
+backend/__pycache__/
+backend/*.pyc
+backend/data.db
+backend/logs/
+backend/backups/
+backend/venv/
+backend/static/uploads/*
+!backend/static/uploads/.gitkeep

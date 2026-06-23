@@ -1,0 +1,102 @@
+{% extends "admin/base.html" %}
+{% block title %}审美卡片管理 · 心研坊管理后台{% endblock %}
+{% block header %}审美卡片管理{% endblock %}
+{% block content %}
+
+<div class="card" style="margin-bottom:20px;" id="new">
+    <h3 style="margin-bottom:16px;">添加卡片</h3>
+    <form id="cardForm">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+            <div class="form-group">
+                <label for="c_title">标题 *</label>
+                <input type="text" id="c_title" placeholder="卡片标题" required>
+            </div>
+            <div class="form-group">
+                <label for="c_tag">分类标签</label>
+                <input type="text" id="c_tag" placeholder="例如: 实验设计">
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+                <label for="c_description">描述</label>
+                <textarea id="c_description" rows="2" placeholder="卡片描述文字"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="c_icon">Font Awesome 图标</label>
+                <input type="text" id="c_icon" value="fa-solid fa-star" placeholder="fa-solid fa-star">
+            </div>
+            <div class="form-group">
+                <label for="c_height">图片区高度 (px)</label>
+                <input type="number" id="c_height" value="200" min="150" max="400">
+            </div>
+            <div class="form-group">
+                <label for="c_tutorial">关联教程标题</label>
+                <input type="text" id="c_tutorial" placeholder="留空则不可点击">
+            </div>
+            <div class="form-group">
+                <label for="c_link">外部链接 (可选)</label>
+                <input type="text" id="c_link" placeholder="https://...">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> 添加</button>
+    </form>
+</div>
+
+<div class="card" style="padding:0;">
+    {% if cards %}
+    <table>
+        <thead><tr><th>图标</th><th>标题</th><th>标签</th><th>高度</th><th>关联</th><th>操作</th></tr></thead>
+        <tbody>
+        {% for c in cards %}
+        <tr>
+            <td><i class="{{ c.icon }}"></i></td>
+            <td>{{ c.title[:40] }}</td>
+            <td><span class="badge badge-muted">{{ c.tag or '-' }}</span></td>
+            <td>{{ c.height }}px</td>
+            <td>{{ c.tutorial_title or c.link_url[:30] or '-' }}</td>
+            <td>
+                <div class="actions">
+                    <button onclick="deleteCard({{ c.id }})" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><i class="fa-solid fa-images"></i>还没有审美卡片</div>
+    {% endif %}
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('cardForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        title: document.getElementById('c_title').value.trim(),
+        description: document.getElementById('c_description').value.trim(),
+        icon: document.getElementById('c_icon').value.trim(),
+        tag: document.getElementById('c_tag').value.trim(),
+        height: parseInt(document.getElementById('c_height').value) || 200,
+        tutorial_title: document.getElementById('c_tutorial').value.trim(),
+        link_url: document.getElementById('c_link').value.trim(),
+    };
+    try {
+        const res = await fetch('/api/admin/cards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (res.ok) { location.reload(); }
+        else { const d = await res.json(); alert('错误: ' + d.error); }
+    } catch(err) { alert('网络错误: ' + err.message); }
+});
+
+async function deleteCard(id) {
+    if (!confirm('确定要删除这张卡片吗？')) return;
+    try {
+        const res = await fetch('/api/admin/cards/' + id, { method: 'DELETE' });
+        if (res.ok) { location.reload(); }
+    } catch(e) { alert('网络错误: ' + e.message); }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 · 心研坊管理后台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --primary: #cc785c; --primary-hover: #b8654a; --bg: #f5f2ed; --card: #ffffff; --text: #1a1a1a; --muted: #6b6b6b; --border: #e0dcd5; --radius: 8px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-box { background: var(--card); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); padding: 40px; width: 100%; max-width: 400px; }
+        .login-box h1 { font-size: 1.4rem; margin-bottom: 4px; }
+        .login-box h1 i { color: var(--primary); margin-right: 8px; }
+        .login-box p { color: var(--muted); font-size: 0.9rem; margin-bottom: 28px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+        .form-group input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.95rem; }
+        .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(204,120,92,0.1); }
+        .btn { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: var(--radius); font-size: 1rem; cursor: pointer; font-weight: 600; }
+        .btn:hover { background: var(--primary-hover); }
+        .error { background: #fde8e4; color: #d1523c; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 18px; font-size: 0.9rem; }
+        .back { display: block; text-align: center; margin-top: 20px; color: var(--muted); font-size: 0.85rem; text-decoration: none; }
+        .back:hover { color: var(--primary); }
+    </style>
+</head>
+<body>
+<div class="login-box">
+    <h1><i class="fa-solid fa-brain"></i> 心研坊</h1>
+    <p>管理后台登录</p>
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+    <form method="POST">
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" name="username" required autofocus>
+        </div>
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn">登 录</button>
+    </form>
+    <a href="/" class="back">返回网站首页</a>
+</div>
+</body>
+</html>

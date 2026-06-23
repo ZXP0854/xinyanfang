@@ -1,0 +1,89 @@
+{% extends "admin/base.html" %}
+{% block title %}{% if tutorial %}编辑教程{% else %}新建教程{% endif %} · 心研坊管理后台{% endblock %}
+{% block header %}{% if tutorial %}编辑教程{% else %}新建教程{% endif %}{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('admin.tutorial_list') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> 返回列表</a>
+
+<div class="card" style="margin-top:12px;">
+    <form id="tutorialForm">
+        <div class="form-group">
+            <label for="node_id">节点ID *</label>
+            <input type="text" id="node_id" value="{{ tutorial.node_id if tutorial else '' }}" placeholder="例如: 1-3, 2-2-3" required>
+            <span style="font-size:0.8rem;color:var(--muted);">对应 workflow 树节点的 ID，格式如 1-1, 2-2-1</span>
+        </div>
+        <div class="form-group">
+            <label for="title">标题 *</label>
+            <input type="text" id="title" value="{{ tutorial.title if tutorial else '' }}" placeholder="教程标题" required>
+        </div>
+        <div class="form-group">
+            <label for="summary">摘要</label>
+            <textarea id="summary" rows="2" placeholder="简短描述（可选）">{{ tutorial.summary if tutorial else '' }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="content">教程内容 (HTML) *</label>
+            <textarea id="content" rows="20" placeholder="HTML 富文本内容...">{{ tutorial.content if tutorial else '' }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="meta_keywords">SEO 关键词</label>
+            <input type="text" id="meta_keywords" value="{{ tutorial.meta_keywords if tutorial else '' }}" placeholder="用逗号分隔的关键词">
+        </div>
+        <div class="form-group">
+            <label for="sort_order">排序</label>
+            <input type="number" id="sort_order" value="{{ tutorial.sort_order if tutorial else 0 }}" style="width:120px;">
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="is_published" {% if tutorial and tutorial.is_published %}checked{% endif %}>
+                发布状态
+            </label>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <button type="submit" class="btn btn-primary">保存</button>
+            <span id="saveStatus" style="font-size:0.85rem;"></span>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+const tutorialId = {{ tutorial.id if tutorial else 'null' }};
+
+document.getElementById('tutorialForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const data = {
+        node_id: document.getElementById('node_id').value.trim(),
+        title: document.getElementById('title').value.trim(),
+        summary: document.getElementById('summary').value.trim(),
+        content: document.getElementById('content').value,
+        meta_keywords: document.getElementById('meta_keywords').value.trim(),
+        sort_order: parseInt(document.getElementById('sort_order').value) || 0,
+        is_published: document.getElementById('is_published').checked,
+    };
+
+    const url = tutorialId ? '/api/admin/tutorials/' + tutorialId : '/api/admin/tutorials';
+    const method = tutorialId ? 'PUT' : 'POST';
+    const status = document.getElementById('saveStatus');
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+
+        if (res.ok) {
+            status.innerHTML = '<span style="color:var(--success);">已保存</span>';
+            if (!tutorialId) { window.location.href = '/admin/tutorials/' + result.tutorial.id + '/edit'; }
+        } else {
+            status.innerHTML = '<span style="color:var(--danger);">错误: ' + (result.error || '未知错误') + '</span>';
+        }
+    } catch(err) {
+        status.innerHTML = '<span style="color:var(--danger);">网络错误: ' + err.message + '</span>';
+    }
+});
+</script>
+{% endblock %}

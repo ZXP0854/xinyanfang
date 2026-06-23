@@ -1,0 +1,55 @@
+{% extends "admin/base.html" %}
+{% block title %}教程管理 · 心研坊管理后台{% endblock %}
+{% block header %}教程管理{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:16px;">
+    <a href="{{ url_for('admin.tutorial_edit') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> 新建教程</a>
+    <span style="color:var(--muted);font-size:0.85rem;margin-left:12px;">共 {{ tutorials|length }} 个教程</span>
+</div>
+
+<div class="card" style="padding:0;">
+    {% if tutorials %}
+    <table>
+        <thead><tr><th>节点ID</th><th>标题</th><th>状态</th><th>更新时间</th><th>操作</th></tr></thead>
+        <tbody>
+        {% for t in tutorials %}
+        <tr>
+            <td><code>{{ t.node_id }}</code></td>
+            <td>{{ t.title[:50] }}</td>
+            <td>
+                {% if t.is_published %}
+                <span class="badge badge-success">已发布</span>
+                {% else %}
+                <span class="badge badge-muted">草稿</span>
+                {% endif %}
+            </td>
+            <td>{{ t.updated_at.strftime('%Y-%m-%d %H:%M') if t.updated_at else '-' }}</td>
+            <td>
+                <div class="actions">
+                    <a href="{{ url_for('admin.tutorial_edit', tutorial_id=t.id) }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-pen"></i></a>
+                    <button onclick="deleteTutorial({{ t.id }}, '{{ t.title }}')" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><i class="fa-solid fa-book-open"></i>还没有教程内容<br><a href="{{ url_for('admin.tutorial_edit') }}">创建第一个教程</a></div>
+    {% endif %}
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+async function deleteTutorial(id, title) {
+    if (!confirm('确定要删除教程「' + title + '」吗？此操作不可撤销。')) return;
+    try {
+        const res = await fetch('/api/admin/tutorials/' + id, { method: 'DELETE' });
+        if (res.ok) { location.reload(); }
+        else { const data = await res.json(); alert('删除失败: ' + data.error); }
+    } catch(e) { alert('网络错误: ' + e.message); }
+}
+</script>
+{% endblock %}

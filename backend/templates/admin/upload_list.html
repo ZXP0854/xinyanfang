@@ -1,0 +1,94 @@
+{% extends "admin/base.html" %}
+{% block title %}文件管理 · 心研坊管理后台{% endblock %}
+{% block header %}文件管理{% endblock %}
+{% block content %}
+
+<div class="card" style="margin-bottom:20px;">
+    <h3 style="margin-bottom:16px;">上传文件</h3>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="file">选择文件</label>
+            <input type="file" id="file" name="file" accept="image/*,.pdf,.doc,.docx" required>
+            <span style="font-size:0.8rem;color:var(--muted);">支持 JPG/PNG/GIF/WebP/SVG/PDF/DOC，最大 16MB</span>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-upload"></i> 上传</button>
+            <span id="uploadStatus" style="font-size:0.85rem;"></span>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="padding:0;">
+    {% if uploads %}
+    <table>
+        <thead><tr><th>预览</th><th>文件名</th><th>原始名</th><th>大小</th><th>上传时间</th><th>操作</th></tr></thead>
+        <tbody>
+        {% for u in uploads %}
+        <tr>
+            <td>
+                {% if u.mime_type and u.mime_type.startswith('image/') %}
+                <img src="{{ url_for('static', filename='uploads/' + u.filename) }}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:4px;">
+                {% else %}
+                <i class="fa-solid fa-file" style="font-size:1.5rem;color:var(--muted);"></i>
+                {% endif %}
+            </td>
+            <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ u.filename }}</td>
+            <td>{{ u.original_name[:30] }}</td>
+            <td>{{ (u.file_size / 1024)|round|int }} KB</td>
+            <td>{{ u.created_at.strftime('%m-%d %H:%M') if u.created_at else '-' }}</td>
+            <td>
+                <div class="actions">
+                    <button onclick="copyPath('{{ u.relative_path }}')" class="btn btn-secondary btn-sm" title="复制路径"><i class="fa-solid fa-copy"></i></button>
+                    <button onclick="deleteUpload({{ u.id }})" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><i class="fa-solid fa-cloud-arrow-up"></i>还没有上传文件</div>
+    {% endif %}
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('file', document.getElementById('file').files[0]);
+    const status = document.getElementById('uploadStatus');
+
+    try {
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok) {
+            status.innerHTML = '<span style="color:var(--success);">上传成功: ' + data.upload.original_name + '</span>';
+            setTimeout(() => location.reload(), 800);
+        } else {
+            status.innerHTML = '<span style="color:#d1523c;">错误: ' + (data.error || '未知') + '</span>';
+        }
+    } catch(err) {
+        status.innerHTML = '<span style="color:#d1523c;">网络错误: ' + err.message + '</span>';
+    }
+});
+
+async function deleteUpload(id) {
+    if (!confirm('确定要删除这个文件吗？')) return;
+    try {
+        const res = await fetch('/api/admin/uploads/' + id, { method: 'DELETE' });
+        if (res.ok) { location.reload(); }
+    } catch(e) { alert('网络错误: ' + e.message); }
+}
+
+function copyPath(path) {
+    const url = window.location.origin + '/' + path;
+    navigator.clipboard.writeText(url).then(() => {
+        alert('路径已复制: ' + url);
+    }).catch(() => {
+        prompt('复制此路径:', url);
+    });
+}
+</script>
+{% endblock %}
