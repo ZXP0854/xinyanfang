@@ -7,6 +7,7 @@ import os
 import shutil
 import logging
 from datetime import datetime, timedelta
+from sqlalchemy import text
 from apscheduler.schedulers.background import BackgroundScheduler
 
 scheduler = BackgroundScheduler()
@@ -71,7 +72,7 @@ def init_scheduler(app):
         """每 15 分钟健康检查"""
         try:
             from models import db
-            db.session.execute(db.text('SELECT 1'))
+            db.session.execute(text('SELECT 1'))
             app.logger.debug('Health check: OK')
         except Exception as e:
             app.logger.error(f'Health check failed: {e}')
