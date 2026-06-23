@@ -5,15 +5,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>心研坊 · 登录</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div id="login-page">
     <div class="login-card">
-        <h1 class="serif serif-lg" style="margin-bottom: 16px;">心研坊</h1>
-        <p style="font-size: 18px; color: var(--body); margin-bottom: 32px;">心理学研究方法 · 全流程辅助平台</p>
-        <p style="margin-bottom: 40px;">从选题到报告，每一步都有清晰指引。<br>面向应用心理学本硕同学，让科研更从容。</p>
-        <button class="btn-primary" id="enter-main-btn" style="font-size: 16px; padding: 14px 32px;">进入平台 →</button>
+        <h1 class="serif serif-lg blur-text" style="margin-bottom: 16px;">心研坊</h1>
+        <p class="blur-text" style="font-size: 18px; color: var(--body); margin-bottom: 32px;">心理学研究方法 · 全流程辅助平台</p>
+        <p class="blur-text" style="margin-bottom: 0;">从选题到报告，每一步都有清晰指引。</p>
+        <p class="blur-text" style="margin-bottom: 40px;">面向应用心理学本硕同学，让科研更从容。</p>
+        <div class="flip-row" aria-label="平台模块">
+            <div class="flip-card" tabindex="0">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <i class="fa-solid fa-diagram-project"></i>
+                        <span>掌握科研流程</span>
+                    </div>
+                    <div class="flip-card-back">
+                        <p>从选题到报告，五步法全流程教学指引</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card" tabindex="0">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <i class="fa-solid fa-palette"></i>
+                        <span>提升科研审美</span>
+                    </div>
+                    <div class="flip-card-back">
+                        <p>精选前沿文章与写作拆解，培养学术眼光</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card" tabindex="0">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <i class="fa-solid fa-box-archive"></i>
+                        <span>获取科研资源</span>
+                    </div>
+                    <div class="flip-card-back">
+                        <p>文献、工具、量表与公开数据集一站汇聚</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card" tabindex="0">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <i class="fa-solid fa-brain"></i>
+                        <span>关于心研坊</span>
+                    </div>
+                    <div class="flip-card-back">
+                        <p>面向应用心理学本硕的开放共建平台</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-stack" aria-label="平台亮点">
+            <div class="scroll-stack-inner">
+                <h2 class="scroll-stack-title">使用我们的网站你可以得到什么？</h2>
+                <div class="scroll-stack-card">
+                    <h2>全流程教学</h2>
+                    <p>从研究兴趣、文献追踪到研究设计、取样、数据分析与论文撰写，每一步都有清晰指引。</p>
+                </div>
+                <div class="scroll-stack-card">
+                    <h2>科研审美</h2>
+                    <p>精选前沿文章与写作拆解教学，培养学术眼光与高水平的表达能力。</p>
+                </div>
+                <div class="scroll-stack-card">
+                    <h2>资源整合</h2>
+                    <p>文献与知识库、工具与软件、心理学量表与公开数据集，一站式汇聚。</p>
+                </div>
+                <div class="scroll-stack-card">
+                    <h2>科研流程导览</h2>
+                    <p>树状导览图与五步法链条，帮助你快速定位当前阶段与下一步行动。</p>
+                </div>
+                <div class="scroll-stack-card">
+                    <h2>开放共建</h2>
+                    <p>由心理学专业学生搭建，持续迭代，欢迎共建属于本硕同学的科研社区。</p>
+                </div>
+                <div class="scroll-stack-end"></div>
+            </div>
+        </div>
+        <button class="btn-primary interactive-hover-btn" id="enter-main-btn" type="button">
+            <span class="interactive-hover-btn__bg" aria-hidden="true"></span>
+            <span class="interactive-hover-btn__text">进入平台</span>
+            <span class="interactive-hover-btn__icon" aria-hidden="true">
+                <span class="interactive-hover-btn__icon-inner">→</span>
+            </span>
+        </button>
     </div>
 </div>
 <script src="js/common.js"></script>

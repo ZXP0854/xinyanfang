@@ -835,11 +835,203 @@ function handleSearch() {
     else alert('请输入关键词');
 }
 
+// ---------- 滚动堆叠卡片（ScrollStack 的原生 JS 实现，使用窗口滚动） ----------
+function initScrollStack() {
+    const stack = document.querySelector('.scroll-stack');
+    if (!stack) return;
+    const cards = Array.from(stack.querySelectorAll('.scroll-stack-card'));
+    if (!cards.length) return;
+    const endEl = stack.querySelector('.scroll-stack-end');
+
+    // 配置（对应 React 组件的 props 默认值）
+    const itemDistance = 100;       // 卡片间距(px)
+    const itemScale = 0.03;         // 每张卡片的缩放增量
+    const itemStackDistance = 30;   // 堆叠时卡片之间的偏移
+    const stackPositionPct = 20;    // 开始堆叠的位置（视口高度百分比）
+    const scaleEndPositionPct = 10; // 缩放结束位置
+    const baseScale = 0.85;         // 第一张卡片的基础缩放
+    const rotationAmount = 0;
+    const blurAmount = 3;           // 越靠后的卡片模糊越强，增强景深/层次感
+
+    cards.forEach((card, i) => {
+        if (i < cards.length - 1) card.style.marginBottom = itemDistance + 'px';
+        card.style.willChange = 'transform, filter';
+        card.style.transformOrigin = 'top center';
+    });
+
+    // 文档内绝对偏移：基于布局盒(offsetTop)，不受 transform 影响，避免反馈抖动
+    const docTop = el => {
+        let y = 0;
+        while (el) { y += el.offsetTop; el = el.offsetParent; }
+        return y;
+    };
+    const progress = (s, a, b) => (s < a ? 0 : s > b ? 1 : (s - a) / (b - a));
+
+    function update() {
+        const scrollTop = window.scrollY || window.pageYOffset;
+        const containerHeight = window.innerHeight;
+        const stackPositionPx = (stackPositionPct / 100) * containerHeight;
+        const scaleEndPositionPx = (scaleEndPositionPct / 100) * containerHeight;
+        const endTop = endEl ? docTop(endEl) : 0;
+
+        // 计算当前最顶层卡片索引（用于模糊深度）
+        let topCardIndex = 0;
+        cards.forEach((c, j) => {
+            const jStart = docTop(c) - stackPositionPx - itemStackDistance * j;
+            if (scrollTop >= jStart) topCardIndex = j;
+        });
+
+        cards.forEach((card, i) => {
+            const cardTop = docTop(card);
+            const triggerStart = cardTop - stackPositionPx - itemStackDistance * i;
+            const triggerEnd = cardTop - scaleEndPositionPx;
+            const pinStart = triggerStart;
+            const pinEnd = endTop - containerHeight / 2;
+
+            const scaleProgress = progress(scrollTop, triggerStart, triggerEnd);
+            const targetScale = baseScale + i * itemScale;
+            const scale = 1 - scaleProgress * (1 - targetScale);
+            const rotation = rotationAmount ? i * rotationAmount * scaleProgress : 0;
+
+            let blur = 0;
+            if (blurAmount && i < topCardIndex) {
+                blur = Math.max(0, (topCardIndex - i) * blurAmount);
+            }
+
+            let translateY = 0;
+            const isPinned = scrollTop >= pinStart && scrollTop <= pinEnd;
+            if (isPinned) {
+                translateY = scrollTop - cardTop + stackPositionPx + itemStackDistance * i;
+            } else if (scrollTop > pinEnd) {
+                translateY = pinEnd - cardTop + stackPositionPx + itemStackDistance * i;
+            }
+
+            card.style.transform =
+                'translate3d(0,' + translateY.toFixed(2) + 'px,0) scale(' +
+                scale.toFixed(3) + ') rotate(' + rotation.toFixed(2) + 'deg)';
+            card.style.filter = blur > 0 ? 'blur(' + blur.toFixed(2) + 'px)' : '';
+        });
+    }
+
+    let ticking = false;
+    function onScroll() {
+        if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(() => { update(); ticking = false; });
+        }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+}
+
+// ---------- 审美页面分类筛选 ----------
+function initAestheticFilter() {
+    const bar = document.getElementById('filterBar');
+    if (!bar) return;
+    const tags = bar.querySelectorAll('.filter-tag');
+    const cards = document.querySelectorAll('.masonry-card');
+
+    function applyFilter(category) {
+        cards.forEach(card => {
+            const match = !category || card.getAttribute('data-category') === category;
+            card.classList.toggle('filtered-out', !match);
+        });
+    }
+
+    tags.forEach(tag => {
+        tag.addEventListener('click', () => {
+            const category = tag.getAttribute('data-filter');
+            // 再次点击当前选中的标签则取消筛选，显示全部
+            if (tag.classList.contains('active')) {
+                tag.classList.remove('active');
+                applyFilter(null);
+                return;
+            }
+            tags.forEach(t => t.classList.remove('active'));
+            tag.classList.add('active');
+            applyFilter(category);
+        });
+    });
+}
+
+// ---------- 瀑布流滚动错落淡入 ----------
+function initMasonryReveal() {
+    const cards = document.querySelectorAll('.masonry-card');
+    if (!cards.length) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+        cards.forEach(c => c.classList.add('reveal-in'));
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries, obs) => {
+        // 同批次进入视口的卡片按顺序错落延迟，营造瀑布流动感
+        const incoming = entries.filter(e => e.isIntersecting);
+        incoming.forEach((entry, idx) => {
+            const el = entry.target;
+            el.style.transitionDelay = (idx * 90) + 'ms';
+            el.classList.add('reveal-in');
+            obs.unobserve(el);
+            setTimeout(() => { el.style.transitionDelay = ''; }, 700 + idx * 90);
+        });
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+    cards.forEach(c => observer.observe(c));
+}
+
+function initBlurText() {
+    const elements = document.querySelectorAll('.blur-text');
+    if (!elements.length) return;
+
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    elements.forEach(el => {
+        const text = el.textContent;
+        el.setAttribute('aria-label', text);
+        el.textContent = '';
+
+        Array.from(text).forEach((char, index) => {
+            const span = document.createElement('span');
+            span.className = 'blur-text-segment';
+            span.setAttribute('aria-hidden', 'true');
+            span.textContent = char === ' ' ? '\u00A0' : char;
+            span.style.animationDelay = `${index * 90}ms`;
+            el.appendChild(span);
+        });
+
+        if (reduceMotion) {
+            el.classList.add('in-view');
+            return;
+        }
+
+        if (!('IntersectionObserver' in window)) {
+            el.classList.add('in-view');
+            return;
+        }
+
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('in-view');
+                obs.unobserve(entry.target);
+            });
+        }, { threshold: 0.1, rootMargin: '0px' });
+
+        observer.observe(el);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (!window.location.pathname.includes('index.html') && !window.location.pathname.endsWith('/')) {
         checkLogin();
     }
     highlightNav();
+    initAestheticFilter();
+    initMasonryReveal();
+    initScrollStack();
+    initBlurText();
     document.addEventListener('click', (e) => {
         const nav = document.getElementById('navLinks');
         const toggle = document.querySelector('.nav-toggle');
