@@ -43,22 +43,16 @@ class DevelopmentConfig(Config):
 
 
 class ProductionConfig(Config):
-    """生产环境（阿里云 Linux + 宝塔）"""
+    """生产环境（阿里云 Linux + 宝塔），默认 SQLite，可通过环境变量切换 MySQL/Redis"""
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'DATABASE_URL',
-        'mysql+pymysql://xinyanfang:xinyanfang123@localhost:3306/xinyanfang?charset=utf8mb4'
+        f'sqlite:///{os.path.join(BASE_DIR, "data.db")}'
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_POOL_RECYCLE = 3600
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,
-        'pool_size': 5,
-        'max_overflow': 10,
-    }
-    # 生产环境使用 Redis
-    CACHE_TYPE = 'RedisCache'
-    CACHE_REDIS_URL = Config.REDIS_URL
+    # 缓存：设置 REDIS_URL 环境变量可启用 Redis，否则用内存缓存
+    CACHE_TYPE = 'RedisCache' if os.environ.get('REDIS_URL') else 'SimpleCache'
+    CACHE_REDIS_URL = os.environ.get('REDIS_URL', Config.REDIS_URL)
     CACHE_DEFAULT_TIMEOUT = 600
 
 
