@@ -85,8 +85,10 @@ def init_scheduler(app: Flask):
     start_scheduler(app)
 
 
+# 模块级 WSGI 应用实例（Gunicorn 用）
+application = create_app(os.environ.get('FLASK_ENV', 'production'))
+
 if __name__ == '__main__':
-    application = create_app(os.environ.get('FLASK_ENV', 'development'))
     init_db(application)
     init_scheduler(application)
     application.run(
