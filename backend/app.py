@@ -57,26 +57,31 @@ def create_app(config_name: str = None) -> Flask:
         if upload_folder:
             os.makedirs(upload_folder, exist_ok=True)
 
+        # 自动建表 + 迁移（Gunicorn 启动时也会执行）
+        db.create_all()
+        _run_migrations(db)
+
     return app
 
 
-def init_db(app: Flask):
-    """创建数据库表、执行迁移并初始化管理员账号"""
-    from models import db, User
-    with app.app_context():
-        db.create_all()
-
-        # 迁移：为已有 uploads 表添加 file_type 列（SQLite 兼容）
-        from sqlalchemy import text
+def _run_migrations(db):
+    """每次启动时执行的安全迁移（幂等，失败不中断）"""
+    from sqlalchemy import text
+    migrations = [
+        "ALTER TABLE uploads ADD COLUMN file_type VARCHAR(20) DEFAULT 'document'",
+    ]
+    for sql in migrations:
         try:
-            db.session.execute(
-                text("ALTER TABLE uploads ADD COLUMN file_type VARCHAR(20) DEFAULT 'document'")
-            )
+            db.session.execute(text(sql))
             db.session.commit()
         except Exception:
             db.session.rollback()
 
-        # 如果还没有管理员，创建默认账号
+
+def init_db(app: Flask):
+    """初始化管理员账号（建表和迁移已在 create_app 中自动执行）"""
+    from models import db, User
+    with app.app_context():
         if User.query.count() == 0:
             admin = User(
                 username='admin',
