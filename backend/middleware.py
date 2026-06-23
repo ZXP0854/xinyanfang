@@ -7,6 +7,7 @@ import html
 import time
 from functools import wraps
 from collections import defaultdict
+from typing import Dict, List
 from flask import request, jsonify, g
 
 
@@ -54,7 +55,7 @@ def validate_required(data: dict, fields: list) -> list:
 
 # ─── 简单速率限制（内存版，生产环境用 Flask-Limiter + Redis）────
 
-_rate_limit_store: dict[str, list] = defaultdict(list)
+_rate_limit_store = defaultdict(list)  # type: Dict[str, List[float]]
 
 
 def rate_limit(max_requests: int = 60, window_seconds: int = 60):
