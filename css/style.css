@@ -1058,7 +1058,78 @@ body {
     }
 }
 
-footer {
+/* ─── 关于页面·悬停展开卡片 ────────────────────────── */
+.about-heart-card {
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px 28px 28px;
+    box-shadow: 0 4px 20px rgba(100, 80, 60, 0.10);
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
+    margin-bottom: 24px;
+}
+.about-heart-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(100, 80, 60, 0.20);
+}
+
+.about-heart-bg {
+    position: absolute;
+    top: -40px;
+    left: -40px;
+    z-index: 0;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    opacity: 0.85;
+    transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.about-heart-card:hover .about-heart-bg {
+    transform: scale(22);
+}
+.about-heart-card:nth-of-type(1) .about-heart-bg {
+    background: linear-gradient(135deg, #cc785c, #a9583e);
+}
+.about-heart-card:nth-of-type(2) .about-heart-bg {
+    background: linear-gradient(135deg, #6f9bbf, #3f6f9b);
+}
+
+.about-heart-content {
+    position: relative;
+    z-index: 1;
+    transition: color 0.5s ease;
+}
+.about-heart-card h3 { transition: color 0.5s ease; }
+.about-heart-card p { transition: color 0.5s ease; }
+
+.about-heart-card:hover h3,
+.about-heart-card:hover p {
+    color: #fff;
+}
+
+.about-heart-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    color: #fff;
+    margin-bottom: 16px;
+    transition: background 0.5s ease;
+}
+.about-heart-card:nth-of-type(1) .about-heart-icon {
+    background: linear-gradient(135deg, #cc785c, #a9583e);
+}
+.about-heart-card:nth-of-type(2) .about-heart-icon {
+    background: linear-gradient(135deg, #6f9bbf, #3f6f9b);
+}
+.about-heart-card:hover .about-heart-icon {
+    background: rgba(255,255,255,0.25);
+}
     background-color: var(--surface-dark);
     color: var(--on-dark-soft);
     padding: 48px 32px;
