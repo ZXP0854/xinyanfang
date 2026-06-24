@@ -9,22 +9,20 @@ const treeData = [
     { id: "3-1-1", name: "常见的取样方法", stage: 3 },
     { id: "3-1-2", name: "样本代表性评估及误区", stage: 3 },
     { id: "3-2", name: "样本量规划", stage: 3 },
-    { id: "3-3", name: "伦理规范", stage: 3 },
+    { id: "3-3", name: "知情同意与伦理规范", stage: 3 },
     { id: "4-1", name: "变量量表选择", stage: 4 },
     { id: "4-2-1", name: "问卷类的数据收集", stage: 4 },
     { id: "4-2-2", name: "行为实验数据收集—Psychopy", stage: 4 },
-    { id: "4-2-3", name: "行为实验数据收集—CEST", stage: 4 },
-    { id: "4-2-4", name: "行为实验数据收集—Gorilla/Pavlovia", stage: 4 },
-    { id: "4-3-1", name: "数据清洗", stage: 4 },
-    { id: "4-3-2", name: "描述性统计", stage: 4 },
-    { id: "4-4-1", name: "信度检验", stage: 4 },
-    { id: "4-4-2", name: "效度检验", stage: 4 },
-    { id: "4-4-3", name: "偏差识别", stage: 4 },
+    { id: "4-2-3", name: "行为实验数据收集—CEST/Gorilla/Pavlovia", stage: 4 },
+    { id: "4-3-1", name: "数据清洗与描述性统计", stage: 4 },
+    { id: "4-4-1", name: "信效度检验", stage: 4 },
+    { id: "4-4-2", name: "共同方法偏差识别", stage: 4 },
     { id: "4-5-1", name: "基础统计分析方法", stage: 4 },
     { id: "4-5-2", name: "高级统计分析方法", stage: 4 },
     { id: "5-1-1", name: "研究结果的呈现方式", stage: 5 },
     { id: "5-1-2", name: "研究结果的数据解读", stage: 5 },
-    { id: "5-2", name: "研究报告的个性化撰写", stage: 5 }
+    { id: "5-2", name: "研究报告的个性化撰写", stage: 5 },
+    { id: "5-3", name: "研究报告的格式修订", stage: 5 }
 ];
 
 // 分组名称映射（用于虚拟分组）
@@ -129,202 +127,42 @@ function getTutorialTemplate(nodeId, nodeName) {
 
 // 针对特定节点的图文并茂排版（放在“教程说明”文字下面）
 function getRichContent(nodeId, nodeName) {
-    if (nodeId === '1-2') {
-        return `
-        <div class="tutorial-rich">
-            <div class="rich-divider"></div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <h4>图文教程：</h4>
-                    <p>【一、在 Zotero 下载 Connected Papers 搜索】</p>
-                    <p>打开 Zotero，在 Zotero 上方找到“编辑”→“设置”→“打开数据文件夹” →“locate”文件夹</p>
-                </div>
-                <div class="rich-gallery">
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image1.jpeg" alt="打开 Zotero 设置">
-                        <div class="rich-figure-cap">图1</div>
-                    </div>
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image2.jpeg" alt="定位 locate 文件夹">
-                        <div class="rich-figure-cap">图2</div>
-                    </div>
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image3.jpeg" alt="Connected Papers 搜索界面">
-                        <div class="rich-figure-cap">图3</div>
-                    </div>
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image4.jpeg" alt="Zotero 下载 Connected Papers">
-                        <div class="rich-figure-cap">图4</div>
-                    </div>
-                </div>
+    const tutorials = {
+        '1-1': { title: 'ChatGPT辅助前沿追踪与选题', desc: '研究初期方向模糊、前沿信息分散难抓，用ChatGPT5快速梳理近五年心理学研究前沿动态并辅助生成选题，帮你精准锁定有价值的研究方向，告别盲目摸索。' },
+        '1-2': { title: 'Connected Papers+Zotero一键生成&管理文献图谱', desc: '文献堆积却理不清脉络关联，用Connected Papers一键生成核心文献关联图谱，配合Zotero高效管理，快速构建领域知识框架，看清研究版图。' },
+        '1-3': { title: 'ChatGPT多维评估选题可行性', desc: '选题可行性难以判断、容易踩坑，让ChatGPT5联网检索近年心理学研究文献，从创新性和可行性多维度评估并给出具体建议，降低试错成本，让选题更稳妥。' },
+        '2-1': { title: 'Deepseek辅助变量关系梳理与框架绘制', desc: '心理学变量关系复杂抽象、难以形成清晰框架，结合AMOS与Deepseek绘制关系图并自动评估模型合理性，把模糊假设变成直观的研究蓝图。' },
+        '2-2-1': { title: '实验设计方法手册与ChatGPT智能推荐', desc: '心理学实验设计方法众多却选不准，系统对比6-8种经典设计并附核心期刊文献案例，再用ChatGPT根据你的选题智能推荐最优方案，设计决策有据可依。' },
+        '2-2-2': { title: '前沿模型分析方法手册与ChatGPT/Gemini推荐', desc: '心理学研究模型分析方法眼花缭乱、适用场景不清，梳理前沿模型的特点与场景，借助ChatGPT/Gemini匹配研究特征，找到最合适的分析路径，不再无从下手。' },
+        '3-1-1': { title: 'Elicit辅助取样方法文献检索', desc: '取样方法选择缺乏文献支撑，用Elicit快速定位各方法的心理学研究权威文献，系统对比特点与适用场景，让取样决策有理有据。' },
+        '3-1-2': { title: 'Gemini+SPSS样本代表性评估与偏差识别', desc: '样本代表性不足却难以量化评估，借助Gemini辅助SPSS完成卡方拟合优度检验，自动识别数据偏差，确保样本质量经得起学术推敲。' },
+        '3-2': { title: 'G*Power与R语言样本量ChatGPT规划全攻略', desc: '心理学实验样本量算不准、纵向流失没预案，用G*power完成功效分析与流失补偿，再用ChatGPT生成R代码，让样本规划科学高效。' },
+        '3-3': { title: 'Gemini/ChatGPT起草知情同意书与Qualtrics伦理设置', desc: '心理学研究伦理审查流程繁琐易遗漏，用Gemini/ChatGPT起草标准知情同意书，配合Qualtrics实现匿名化与合规跳转，全程守护研究伦理底线。' },
+        '4-1': { title: '常用心理学量表库汇总与使用教程', desc: '测量工具分散难找、筛选耗时，汇总全网心理学量表库资源，手把手教你快速检索与筛选，精准匹配研究需求的量表。' },
+        '4-2-1': { title: 'EpiData与见数平台问卷收集全流程', desc: '问卷发放回收效率低、管理混乱，从纸质问卷排版到EpiData录入，再到见数平台线上编制发布，覆盖心理学问卷数据收集的全流程。' },
+        '4-2-2': { title: 'ChatGPT辅助PsychoPy编程与在线化部署', desc: '心理学行为实验编程门槛高、搭建周期长，借助ChatGPT编写PsychoPy代码并生成实验材料，通过见数平台实现线上部署，让实验搭建不再困难。' },
+        '4-2-3': { title: 'CEST/Gorilla/Pavlovia实验平台教程', desc: '在线心理学实验平台众多却无从选择，对比CEST、Gorilla和Pavlovia三大平台，从搭建到运行全流程演示，找到最适合你的方案。' },
+        '4-3-1': { title: 'SPSS与Dingo数据清洗、描述性统计实战教程', desc: '原始数据脏乱、清洗步骤繁琐，用SPSS完成缺失值处理、插补与描述统计，再借助Dingo智能清洗，为后续分析准备好干净数据。' },
+        '4-4-1': { title: 'ChatSPSS与AI对话实现信效度检验', desc: '信效度检验步骤繁琐、软件操作复杂，用ChatSPSS和AI对话式完成信效度分析，自动生成检验报告，让测量质量评估轻松搞定。' },
+        '4-4-2': { title: 'ChatGPT/Gemini辅助共同方法偏差识别与处理', desc: '共同方法偏差隐蔽难察觉，用ChatGPT/Gemini辅助识别数据中的系统性偏差，以共同方法偏差为例给出处理方案，提升研究严谨性。' },
+        '4-5-1': { title: 'ChatGPT/Gemini辅助批量中介分析快速上手', desc: '中介分析批量处理耗时费力，借助ChatGPT/Gemini实现批量中介分析，从模型设定到结果输出一气呵成，大幅提升心理学研究统计分析效率。' },
+        '4-5-2': { title: 'ChatGPT辅助Mplus与R语言高级统计分析', desc: '高级统计方法上手难、软件总报错，用ChatGPT辅助Mplus模型选择与结果解读，配合Cursor生成R代码分析多层线性模型，攻克心理学研究中的高阶统计分析。' },
+        '5-1-1': { title: '多种AI工具一键绘制研究结果图表', desc: '图表制作反复调整，绘制费时且不够专业，用Gemini、Cursor或Claude等AI工具自动生成结果图表，精准表达心理学研究中的变量关系与实验逻辑，让结果可视化变得直观清晰。' },
+        '5-1-2': { title: 'Gemini辅助图表生成与数据解读', desc: '数据解读缺乏思路、表述不规范，用Gemini生成图表并自动撰写符合心理学学术规范的数据解读，从数字到文字无缝衔接，让结果陈述更加规范有力。' },
+        '5-2': { title: 'ChatGPT定制目标期刊写作模板', desc: '写作模板千篇一律、期刊风格难把握，用ChatGPT检索目标心理学期刊文献并生成个性化写作模板，匹配期刊特色，让研究报告撰写更有针对性。' },
+        '5-3': { title: 'Gemini一键修订论文格式规范', desc: '论文格式反复修改、细节易遗漏，用Gemini一键识别并修正格式问题，从引用规范到排版细节全面把关，让论文格式符合心理学论文发表要求。' }
+    };
+    const t = tutorials[nodeId];
+    if (!t) return '';
+    return `<div class=”tutorial-rich”>
+        <div class=”rich-divider”></div>
+        <div class=”rich-block”>
+            <div class=”rich-text”>
+                <h4>${t.title}</h4>
+                <p>${t.desc}</p>
             </div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <p>方法一：利用记事本复制如下代码到 engines.json 文件里：</p>
-                </div>
-                <div class="rich-gallery">
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image5.jpeg" alt="编辑 engines.json 文件">
-                        <div class="rich-figure-cap">图5</div>
-                    </div>
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image6.jpeg" alt="Connected Papers 插件配置">
-                        <div class="rich-figure-cap">图6</div>
-                    </div>
-                </div>
-            </div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <pre style="white-space: pre-wrap; font-size: 0.9rem; background: #f5f0eb; border-radius: 12px; padding: 16px; overflow-x: auto; border: 1px solid rgba(204,120,92,0.18);">
-{
-"_name": "Connected Papers",
-"_alias": "Connected Papers文献网络",
-"_description": "Connected Papers文献网络",
-"_icon": "https://www.connectedpapers.com/favicon.ico",
-"_hidden": false,
-"_urlTemplate": "https://www.connectedpapers.com/search?q={z:title}+{z:year}",
-"_urlParams": [],
-"_urlNamespaces": {
-"rft": "info:ofi/fmt:kev:mtx:journal",
-"z": "http://www.zotero.org/namespaces/openSearch#",
-"": "http://a9.com/-/spec/opensearch/1.1/"
-},
-"_iconSourceURI": "https://www.connectedpapers.com/favicon.ico"
-}
-                    </pre>
-                </div>
-            </div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <p>方法二：下载 engines.json 文件（已附上超链接）。</p>
-                    <p>这个文件里面包含了很多自定义的搜索引擎，其中就有我们需要的 Connected Papers，替换 locates 文件夹中的 engines.json，直接覆盖就行，之后重启 Zotero 使用 Connected Papers 搜索文献。</p>
-                </div>
-                <div class="rich-gallery">
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image7.jpeg" alt="下载 engines.json 文件">
-                        <div class="rich-figure-cap">图7</div>
-                    </div>
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image8.jpeg" alt="Connected Papers 配置文件示例">
-                        <div class="rich-figure-cap">图8</div>
-                    </div>
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image9.jpeg" alt="Zotero 插件设置界面">
-                        <div class="rich-figure-cap">图9</div>
-                    </div>
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image10.jpeg" alt="覆盖 engines.json 文件">
-                        <div class="rich-figure-cap">图10</div>
-                    </div>
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image11.jpeg" alt="重启 Zotero 使用 Connected Papers">
-                        <div class="rich-figure-cap">图11</div>
-                    </div>
-                </div>
-            </div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <h4>【二、图谱的使用方式】</h4>
-                    <p>①节点大小表示论文的引用量</p>
-                    <p>节点面积越大，引用量越大。如下图的节点标记的论文，该节点比较大，引用量为 156 次。</p>
-                </div>
-                <div class="rich-figure">
-                    <img src="images/extracted-docx/image12.jpeg" alt="节点大小表示引用量">
-                    <div class="rich-figure-cap">图12</div>
-                </div>
-            </div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <p>下图节点面积最小，由此可见其引用为 0。</p>
-                </div>
-                <div class="rich-figure">
-                    <img src="images/extracted-docx/image13.jpeg" alt="最小节点引用为0">
-                    <div class="rich-figure-cap">图13</div>
-                </div>
-            </div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <p>②节点颜色表示发表的年份</p>
-                    <p>节点的颜色代表了发表年份，颜色越深表示论文越新，颜色越浅表示论文发表年份越早。这可以直接通过颜色来帮助我们优先阅读的论文。</p>
-                </div>
-                <div class="rich-figure">
-                    <img src="images/extracted-docx/image14.jpeg" alt="节点颜色表示发表年份">
-                    <div class="rich-figure-cap">图14</div>
-                </div>
-            </div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <p>③节点的距离表示相似度</p>
-                    <p>每一个节点都和我们的原始文献有某种关系，主要是根据相似性判断。相似度越大两个节点的距离越近。</p>
-                </div>
-                <div class="rich-figure">
-                    <img src="images/extracted-docx/image15.jpeg" alt="节点距离表示相似度">
-                    <div class="rich-figure-cap">图15</div>
-                </div>
-            </div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <p>④线条的粗细表示相似度</p>
-                    <p>两篇文献的相似度越高，连接线条就越粗；相似度越低，连接线条越细。</p>
-                    <p>⑤Prior works，图谱中文献高频引用的文献</p>
-                    <p>点击 Prior works 按钮，可以查看被图谱所引用的文献。如果一篇文献被大部分节点引用，说明它可能更重要，值得主动阅读。</p>
-                </div>
-                <div class="rich-figure">
-                    <img src="images/extracted-docx/image16.jpeg" alt="Prior works 高频引用文献">
-                    <div class="rich-figure-cap">图16</div>
-                </div>
-            </div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <p>⑥Derivative works 引用了图谱中节点文献的文献。</p>
-                    <p>查看那些引用原始文献的论文，可以帮助我们快速掌握该领域的研究进展。</p>
-                    <p>离此节点越近的文献相似度越高；节点越大表示引用量越高，意味着更值得优先阅读。</p>
-                </div>
-                <div class="rich-figure">
-                    <img src="images/extracted-docx/image17.jpeg" alt="Derivative works 研究进展">
-                    <div class="rich-figure-cap">图17</div>
-                </div>
-            </div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <h4>【三、批量下载 Connected Papers 到 Zotero - 导入到 Zotero 中下载题录信息】</h4>
-                    <p>如果找到了很多对应的论文，可以手动下载，也可以通过插件直接抓取到 Zotero 中。</p>
-                    <p>点击 Connected Papers 的 download 按钮下载 bib 文件，打开后全选复制，进入 Zotero，选择“文件”→“从剪切板导入”，即可导入成功。</p>
-                </div>
-                <div class="rich-gallery">
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image18.jpeg" alt="批量下载 Connected Papers">
-                        <div class="rich-figure-cap">图18</div>
-                    </div>
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image19.jpeg" alt="Bib 文件导入 Zotero">
-                        <div class="rich-figure-cap">图19</div>
-                    </div>
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image20.jpeg" alt="从剪切板导入 Zotero">
-                        <div class="rich-figure-cap">图20</div>
-                    </div>
-                    <div class="rich-figure">
-                        <img src="images/extracted-docx/image21.jpeg" alt="导入成功界面">
-                        <div class="rich-figure-cap">图21</div>
-                    </div>
-                </div>
-            </div>
-            <div class="rich-block">
-                <div class="rich-text">
-                    <h4>【总结】</h4>
-                    <p>用 Connected Papers + Zotero，你可以：</p>
-                    <ul>
-                        <li>从一篇心理学文献出发，快速生成五年核心文献关系图</li>
-                        <li>一眼看清引用量、发表年份、相似度、前置文献和衍生文献</li>
-                        <li>重点关注 Prior works（高被引论文）和 Derivative works（研究进展）</li>
-                        <li>一键批量导入 Zotero，省去手动整理时间</li>
-                    </ul>
-                </div>
-            </div>
-        </div>`;
-    }
-    return '';
+        </div>
+    </div>`;
 }
 
 // 渲染教程详情
