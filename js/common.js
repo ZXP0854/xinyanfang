@@ -438,11 +438,11 @@ function createRingSVG(containerId) {
     const DRAWER_COLLAPSE = R_OUTER / DR_OUTER;
 
     const segments = [
-        { label: '选题探索', short: '选题探索', stage: 1, light: '#E7D2CC', main: '#DABAB0', dark: '#87736D', desc: '捕捉研究兴趣 · 追踪学科前沿 · 确定可行选题' },
-        { label: '研究设计', short: '研究设计', stage: 2, light: '#D8B9AE', main: '#C39383', dark: '#795B51', desc: '梳理变量关系 · 选择实验或模型分析方法' },
-        { label: '取样实施', short: '取样实施', stage: 3, light: '#D1CCC8', main: '#B8B1AB', dark: '#726E6A', desc: '确定取样方法 · 规划样本量 · 遵循伦理规范' },
-        { label: '数据分析', short: '数据分析', stage: 4, light: '#C6D3D8', main: '#A8BCC3', dark: '#687579', desc: '收集与清洗数据 · 完成统计与信效度检验' },
-        { label: '结果报告', short: '结果报告', stage: 5, light: '#C1C6A8', main: '#A0A779', dark: '#63684B', desc: '呈现与解读结果 · 完成研究报告撰写' }
+        { label: '选题探索', short: '选题探索', stage: 1, light: '#E7D2CC', main: '#DABAB0', dark: '#87736D', desc: '利用AI工具辅助完成前沿文献梳理、研究方向定位及选题可行性评估，解决选题阶段的信息获取与决策问题。' },
+        { label: '研究设计', short: '研究设计', stage: 2, light: '#D8B9AE', main: '#C39383', dark: '#795B51', desc: '系统整合实验设计与模型分析方法，借助AI工具实现变量关系梳理与方法智能推荐，协助建立清晰的研究框架与方法路径。' },
+        { label: '取样实施', short: '取样实施', stage: 3, light: '#D1CCC8', main: '#B8B1AB', dark: '#726E6A', desc: '围绕取样方法选择、样本代表性评估、样本量规划及伦理合规操作，提供从方法依据到实践操作的AI工具赋能系统指导。' },
+        { label: '数据分析', short: '数据分析', stage: 4, light: '#C6D3D8', main: '#A8BCC3', dark: '#687579', desc: '覆盖量表资源检索、问卷与实验平台部署、数据清洗与核查、信效度检验及各级统计分析，形成完整的AI工具辅助数据处理的工作流。' },
+        { label: '结果报告', short: '结果报告', stage: 5, light: '#C1C6A8', main: '#A0A779', dark: '#63684B', desc: '聚焦图表生成、数据解读、个性化模板撰写与格式修订，借助AI工具提升研究成果呈现的规范性与效率。' }
     ];
 
     const rad = d => d * Math.PI / 180;
