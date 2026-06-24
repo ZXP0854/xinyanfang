@@ -1090,10 +1090,10 @@ body {
     transform: scale(22);
 }
 .about-heart-card:nth-of-type(1) .about-heart-bg {
-    background: linear-gradient(135deg, #cc785c, #a9583e);
+    background: linear-gradient(135deg, #8b3a24, #6b2210);
 }
 .about-heart-card:nth-of-type(2) .about-heart-bg {
-    background: linear-gradient(135deg, #6f9bbf, #3f6f9b);
+    background: linear-gradient(135deg, #2f5f7f, #1a3d55);
 }
 
 .about-heart-content {
@@ -1119,16 +1119,20 @@ body {
     font-size: 1.5rem;
     color: #fff;
     margin-bottom: 16px;
-    transition: background 0.5s ease;
+    transition: background 0.5s ease, box-shadow 0.5s ease;
 }
 .about-heart-card:nth-of-type(1) .about-heart-icon {
-    background: linear-gradient(135deg, #cc785c, #a9583e);
+    background: linear-gradient(135deg, #8b3a24, #6b2210);
+    box-shadow: 0 4px 12px rgba(139, 58, 36, 0.35);
 }
 .about-heart-card:nth-of-type(2) .about-heart-icon {
-    background: linear-gradient(135deg, #6f9bbf, #3f6f9b);
+    background: linear-gradient(135deg, #2f5f7f, #1a3d55);
+    box-shadow: 0 4px 12px rgba(47, 95, 127, 0.35);
 }
 .about-heart-card:hover .about-heart-icon {
-    background: rgba(255,255,255,0.25);
+    background: #fff;
+    color: #141413;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
     background-color: var(--surface-dark);
     color: var(--on-dark-soft);
