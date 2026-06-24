@@ -868,7 +868,10 @@ function loadAestheticCards() {
     fetch('/api/cards')
         .then(res => res.json())
         .then(data => {
-            if (!data.cards || !data.cards.length) return;
+            if (!data.cards || !data.cards.length) {
+                masonry.innerHTML = '';
+                return;
+            }
             masonry.innerHTML = '';
             data.cards.forEach(card => {
                 const el = document.createElement('a');
