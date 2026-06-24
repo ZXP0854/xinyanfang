@@ -861,6 +861,41 @@ function initBlurText() {
     });
 }
 
+function loadResources() {
+    const modules = document.querySelector('.resource-modules');
+    if (!modules) return;
+
+    fetch('/api/resources')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.modules || !Object.keys(data.modules).length) {
+                modules.innerHTML = '';
+                return;
+            }
+            // 保留模块标题结构，只替换链接列表
+            const moduleEls = modules.querySelectorAll('.resource-module');
+            moduleEls.forEach(el => {
+                const titleEl = el.querySelector('.rm-title');
+                if (!titleEl) return;
+                const moduleName = titleEl.textContent.trim();
+                const items = data.modules[moduleName];
+                const linksUl = el.querySelector('.rm-links');
+                if (!linksUl) return;
+                if (!items || !items.length) {
+                    linksUl.innerHTML = '';
+                    return;
+                }
+                linksUl.innerHTML = items.map(item => {
+                    if (item.link_type === 'external') {
+                        return '<li><a href="' + item.link_value + '" target="_blank"><i class="fa-solid fa-caret-right"></i> ' + item.name + '</a></li>';
+                    }
+                    return '<li><a href="#" onclick="openTutorial(\'' + item.link_value.replace(/'/g, "\\'") + '\');return false"><i class="fa-solid fa-caret-right"></i> ' + item.name + '</a></li>';
+                }).join('');
+            });
+        })
+        .catch(() => {});
+}
+
 function loadAestheticCards() {
     const masonry = document.querySelector('.masonry');
     if (!masonry) return;
@@ -905,6 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
         checkLogin();
     }
     highlightNav();
+    loadResources();
     loadAestheticCards();
     initAestheticFilter();
     initMasonryReveal();
