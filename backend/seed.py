@@ -57,6 +57,48 @@ def seed_tutorials():
         ('5-3', '研究报告的格式修订', '论文格式反复修改、细节易遗漏，用Gemini一键识别并修正格式问题，从引用规范到排版细节全面把关，让论文格式符合心理学论文发表要求。'),
     ]
 
+    for node_id, title, desc in tutorials:
+        content = f'<div class="tutorial-rich"><div class="rich-divider"></div><div class="rich-block"><div class="rich-text"><h4>{title}</h4><p>{desc}</p></div></div></div>'
+        t = Tutorial(node_id=node_id, title=title, summary=desc[:500], content=content, category="workflow", is_published=True)
+        db.session.add(t)
+
+    db.session.commit()
+    print(f'[OK] Seeded {len(tutorials)} tutorials')
+
+
+def seed_resources():
+    """导入科研资源数据"""
+    if Resource.query.first():
+        print('[SKIP] Resources already seeded')
+        return
+
+    resources = [
+        {'module': '文献与知识库', 'name': 'PubMed — 生物医学与心理学文献检索', 'link_type': 'tutorial', 'link_value': 'PubMed 使用指南'},
+        {'module': '文献与知识库', 'name': 'PsycINFO — APA心理学专业数据库', 'link_type': 'tutorial', 'link_value': 'PsycINFO 使用指南'},
+        {'module': '文献与知识库', 'name': 'Google Scholar — 学术搜索引擎高级技巧', 'link_type': 'tutorial', 'link_value': 'Google Scholar 使用技巧'},
+        {'module': '文献与知识库', 'name': '中国知网 (CNKI) — 中文学术资源检索', 'link_type': 'tutorial', 'link_value': 'CNKI 知网检索'},
+        {'module': '文献与知识库', 'name': 'Zotero — 开源文献管理工具', 'link_type': 'tutorial', 'link_value': 'Zotero 文献管理'},
+        {'module': '文献与知识库', 'name': 'Connected Papers — 文献关联图谱工具', 'link_type': 'tutorial', 'link_value': 'Connected Papers 文献网络'},
+        {'module': '工具与软件库', 'name': 'SPSS — 社会科学统计软件包', 'link_type': 'tutorial', 'link_value': 'SPSS 入门教程'},
+        {'module': '工具与软件库', 'name': 'R — 统计计算与图形语言', 'link_type': 'tutorial', 'link_value': 'R语言入门'},
+        {'module': '工具与软件库', 'name': 'JASP — 开源贝叶斯统计软件', 'link_type': 'tutorial', 'link_value': 'JASP 使用指南'},
+        {'module': '工具与软件库', 'name': 'Mplus — 结构方程建模工具', 'link_type': 'tutorial', 'link_value': 'Mplus 入门'},
+        {'module': '工具与软件库', 'name': 'PsychoPy — 心理学实验编程', 'link_type': 'tutorial', 'link_value': 'PsychoPy 教程'},
+        {'module': '工具与软件库', 'name': 'G*Power — 统计功效与样本量计算', 'link_type': 'tutorial', 'link_value': 'G*Power 功效分析'},
+        {'module': '量表与测量资源', 'name': 'BFI-2 — 大五人格量表第二版', 'link_type': 'tutorial', 'link_value': '大五人格量表'},
+        {'module': '量表与测量资源', 'name': 'STAI — 状态-特质焦虑量表', 'link_type': 'tutorial', 'link_value': 'STAI 状态特质焦虑量表'},
+        {'module': '量表与测量资源', 'name': 'CES-D — 流调中心抑郁量表', 'link_type': 'tutorial', 'link_value': 'CES-D 抑郁量表'},
+        {'module': '量表与测量资源', 'name': 'PSS — 压力知觉量表', 'link_type': 'tutorial', 'link_value': 'PSS 压力知觉量表'},
+        {'module': '量表与测量资源', 'name': 'RSES — Rosenberg自尊量表', 'link_type': 'tutorial', 'link_value': 'Rosenberg 自尊量表'},
+        {'module': '量表与测量资源', 'name': 'PANAS — 积极与消极情绪量表', 'link_type': 'tutorial', 'link_value': 'PANAS 积极消极情绪量表'},
+        {'module': '公开数据集', 'name': 'Human Connectome Project — 脑成像公开数据', 'link_type': 'tutorial', 'link_value': 'HCP 公开数据'},
+        {'module': '公开数据集', 'name': 'ABCD Study — 青少年脑与认知发展研究', 'link_type': 'tutorial', 'link_value': 'ABCD Study 数据'},
+        {'module': '公开数据集', 'name': 'CGSS — 中国综合社会调查数据', 'link_type': 'tutorial', 'link_value': 'CGSS 中国综合社会调查'},
+        {'module': '公开数据集', 'name': 'CFPS — 中国家庭追踪调查', 'link_type': 'tutorial', 'link_value': 'CFPS 中国家庭追踪调查'},
+        {'module': '公开数据集', 'name': 'OSF — 开放科学框架数据共享平台', 'link_type': 'tutorial', 'link_value': 'OSF 开放科学框架'},
+        {'module': '公开数据集', 'name': 'ICPSR — 校际政治与社会研究联盟数据', 'link_type': 'tutorial', 'link_value': 'ICPSR 社会科学数据'},
+    ]
+
     for i, r in enumerate(resources):
         db.session.add(Resource(
             module=r['module'],
