@@ -6,7 +6,7 @@
     <title>心研坊 · 获取科研资源</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=8">
+    <link rel="stylesheet" href="css/style.css?v=9">
 </head>
 <body>
 <div class="top-nav">
@@ -29,55 +29,38 @@
     <p>汇集常用量表库、期刊官网等资源，让科研更便捷</p>
 </div>
 <div class="resources-page-container">
+    <p class="resource-disclaimer"><i class="fa-solid fa-circle-info"></i> 本平台仅提供信息索引，所有内容版权归原作者/原网站所有，请用户遵守各网站的使用规定，如有侵权问题请联系主创团队删除。</p>
     <div class="resource-modules">
         <!-- 文献与知识库 -->
         <div class="resource-module">
             <div class="rm-header"><div class="rm-icon"><i class="fa-solid fa-book-open"></i></div><div class="rm-title">文献与知识库</div></div>
-            <ul class="rm-links">
-                <li><a href="#" onclick="openTutorial('PubMed 使用指南');return false"><i class="fa-solid fa-caret-right"></i> PubMed — 生物医学与心理学文献检索</a></li>
-                <li><a href="#" onclick="openTutorial('PsycINFO 使用指南');return false"><i class="fa-solid fa-caret-right"></i> PsycINFO — APA心理学专业数据库</a></li>
-                <li><a href="#" onclick="openTutorial('Google Scholar 使用技巧');return false"><i class="fa-solid fa-caret-right"></i> Google Scholar — 学术搜索引擎高级技巧</a></li>
-                <li><a href="#" onclick="openTutorial('CNKI 知网检索');return false"><i class="fa-solid fa-caret-right"></i> 中国知网 (CNKI) — 中文学术资源检索</a></li>
-                <li><a href="#" onclick="openTutorial('Zotero 文献管理');return false"><i class="fa-solid fa-caret-right"></i> Zotero — 开源文献管理工具</a></li>
-                <li><a href="#" onclick="openTutorial('Connected Papers 文献网络');return false"><i class="fa-solid fa-caret-right"></i> Connected Papers — 文献关联图谱工具</a></li>
-            </ul>
+            <ul class="rm-links"></ul>
         </div>
         <!-- 工具与软件库 -->
         <div class="resource-module">
             <div class="rm-header"><div class="rm-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div><div class="rm-title">工具与软件库</div></div>
-            <ul class="rm-links">
-                <li><a href="#" onclick="openTutorial('SPSS 入门教程');return false"><i class="fa-solid fa-caret-right"></i> SPSS — 社会科学统计软件包</a></li>
-                <li><a href="#" onclick="openTutorial('R语言入门');return false"><i class="fa-solid fa-caret-right"></i> R — 统计计算与图形语言</a></li>
-                <li><a href="#" onclick="openTutorial('JASP 使用指南');return false"><i class="fa-solid fa-caret-right"></i> JASP — 开源贝叶斯统计软件</a></li>
-                <li><a href="#" onclick="openTutorial('Mplus 入门');return false"><i class="fa-solid fa-caret-right"></i> Mplus — 结构方程建模工具</a></li>
-                <li><a href="#" onclick="openTutorial('PsychoPy 教程');return false"><i class="fa-solid fa-caret-right"></i> PsychoPy — 心理学实验编程</a></li>
-                <li><a href="#" onclick="openTutorial('G*Power 功效分析');return false"><i class="fa-solid fa-caret-right"></i> G*Power — 统计功效与样本量计算</a></li>
-            </ul>
+            <ul class="rm-links"></ul>
         </div>
         <!-- 量表与测量资源 -->
         <div class="resource-module">
             <div class="rm-header"><div class="rm-icon"><i class="fa-solid fa-ruler"></i></div><div class="rm-title">量表与测量资源</div></div>
-            <ul class="rm-links">
-                <li><a href="#" onclick="openTutorial('大五人格量表');return false"><i class="fa-solid fa-caret-right"></i> BFI-2 — 大五人格量表第二版</a></li>
-                <li><a href="#" onclick="openTutorial('STAI 状态特质焦虑量表');return false"><i class="fa-solid fa-caret-right"></i> STAI — 状态-特质焦虑量表</a></li>
-                <li><a href="#" onclick="openTutorial('CES-D 抑郁量表');return false"><i class="fa-solid fa-caret-right"></i> CES-D — 流调中心抑郁量表</a></li>
-                <li><a href="#" onclick="openTutorial('PSS 压力知觉量表');return false"><i class="fa-solid fa-caret-right"></i> PSS — 压力知觉量表</a></li>
-                <li><a href="#" onclick="openTutorial('Rosenberg 自尊量表');return false"><i class="fa-solid fa-caret-right"></i> RSES — Rosenberg自尊量表</a></li>
-                <li><a href="#" onclick="openTutorial('PANAS 积极消极情绪量表');return false"><i class="fa-solid fa-caret-right"></i> PANAS — 积极与消极情绪量表</a></li>
-            </ul>
+            <ul class="rm-links"></ul>
         </div>
         <!-- 公开数据集 -->
         <div class="resource-module">
             <div class="rm-header"><div class="rm-icon"><i class="fa-solid fa-database"></i></div><div class="rm-title">公开数据集</div></div>
-            <ul class="rm-links">
-                <li><a href="#" onclick="openTutorial('HCP 公开数据');return false"><i class="fa-solid fa-caret-right"></i> Human Connectome Project — 脑成像公开数据</a></li>
-                <li><a href="#" onclick="openTutorial('ABCD Study 数据');return false"><i class="fa-solid fa-caret-right"></i> ABCD Study — 青少年脑与认知发展研究</a></li>
-                <li><a href="#" onclick="openTutorial('CGSS 中国综合社会调查');return false"><i class="fa-solid fa-caret-right"></i> CGSS — 中国综合社会调查数据</a></li>
-                <li><a href="#" onclick="openTutorial('CFPS 中国家庭追踪调查');return false"><i class="fa-solid fa-caret-right"></i> CFPS — 中国家庭追踪调查</a></li>
-                <li><a href="#" onclick="openTutorial('OSF 开放科学框架');return false"><i class="fa-solid fa-caret-right"></i> OSF — 开放科学框架数据共享平台</a></li>
-                <li><a href="#" onclick="openTutorial('ICPSR 社会科学数据');return false"><i class="fa-solid fa-caret-right"></i> ICPSR — 校际政治与社会研究联盟数据</a></li>
-            </ul>
+            <ul class="rm-links"></ul>
         </div>
+    </div>
+</div>
+<!-- 资源详情弹窗 -->
+<div id="resource-modal" class="resource-modal" aria-hidden="true">
+    <div class="resource-modal-card">
+        <button class="resource-modal-close" aria-label="关闭">&times;</button>
+        <div class="resource-modal-icon"><i class="fa-solid fa-link"></i></div>
+        <h3 id="resource-modal-title" class="resource-modal-title"></h3>
+        <p id="resource-modal-desc" class="resource-modal-desc"></p>
+        <a id="resource-modal-btn" href="#" target="_blank" rel="noopener" class="resource-modal-btn">访问网站 <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
     </div>
 </div>
 <footer>
@@ -86,6 +69,6 @@
         <span>开发共建中</span>
     </div>
 </footer>
-<script src="js/common.js?v=8"></script>
+<script src="js/common.js?v=9"></script>
 </body>
 </html>

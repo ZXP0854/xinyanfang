@@ -883,14 +883,35 @@ function loadResources() {
                     return;
                 }
                 linksUl.innerHTML = items.map(item => {
-                    if (item.link_type === 'external') {
-                        return '<li><a href="' + item.link_value + '" target="_blank"><i class="fa-solid fa-caret-right"></i> ' + item.name + '</a></li>';
-                    }
-                    return '<li><a href="#" onclick="openTutorial(\'' + item.link_value.replace(/'/g, "\\'") + '\');return false"><i class="fa-solid fa-caret-right"></i> ' + item.name + '</a></li>';
+                    const name = item.name.replace(/'/g, "\\'");
+                    const desc = (item.description || '').replace(/'/g, "\\'");
+                    const url = (item.link_value || '#').replace(/'/g, "\\'");
+                    return '<li><a href="#" onclick="showResourceModal(\'' + name + '\',\'' + desc + '\',\'' + url + '\');return false"><i class="fa-solid fa-caret-right"></i> ' + item.name + '</a></li>';
                 }).join('');
             });
         })
         .catch(() => {});
+}
+
+function showResourceModal(name, description, url) {
+    const modal = document.getElementById('resource-modal');
+    if (!modal) return;
+    document.getElementById('resource-modal-title').textContent = name;
+    document.getElementById('resource-modal-desc').textContent = description || '暂无简介';
+    const btn = document.getElementById('resource-modal-btn');
+    btn.href = url;
+    btn.style.display = url && url !== '#' ? 'inline-flex' : 'none';
+    modal.classList.add('visible');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeResourceModal() {
+    const modal = document.getElementById('resource-modal');
+    if (!modal) return;
+    modal.classList.remove('visible');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
 }
 
 function loadAestheticCards() {
@@ -943,11 +964,19 @@ document.addEventListener('DOMContentLoaded', () => {
     initMasonryReveal();
     initScrollStack();
     initBlurText();
+    // 资源弹窗关闭按钮
+    const rmClose = document.querySelector('.resource-modal-close');
+    if (rmClose) rmClose.addEventListener('click', closeResourceModal);
     document.addEventListener('click', (e) => {
         const nav = document.getElementById('navLinks');
         const toggle = document.querySelector('.nav-toggle');
         if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !toggle?.contains(e.target)) {
             nav.classList.remove('open');
+        }
+        // 点击弹窗外部关闭
+        const resourceModal = document.getElementById('resource-modal');
+        if (resourceModal && resourceModal.classList.contains('visible') && !resourceModal.querySelector('.resource-modal-card').contains(e.target) && !e.target.closest('.rm-links a')) {
+            closeResourceModal();
         }
     });
 });
