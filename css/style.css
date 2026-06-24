@@ -1058,84 +1058,8 @@ body {
     }
 }
 
-/* ─── 关于页面·悬停展开卡片 ────────────────────────── */
-.about-heart-card {
-    position: relative;
-    cursor: pointer;
-    overflow: hidden;
-    background: #fff;
-    border-radius: 20px;
-    padding: 32px 28px 28px;
-    box-shadow: 0 4px 20px rgba(100, 80, 60, 0.10);
-    transition: transform 0.5s ease, box-shadow 0.5s ease;
-    margin-bottom: 24px;
-}
-.about-heart-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 40px rgba(100, 80, 60, 0.20);
-}
-
-.about-heart-bg {
-    position: absolute;
-    top: -(14px);
-    left: -(14px);
-    z-index: 0;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    opacity: 0.9;
-    transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
-    transform-origin: center;
-}
-.about-heart-card:hover .about-heart-bg {
-    transform: scale(30);
-}
-.about-heart-card:nth-of-type(1) .about-heart-bg {
-    background: linear-gradient(135deg, #cc785c, #b8553e);
-}
-.about-heart-card:nth-of-type(2) .about-heart-bg {
-    background: linear-gradient(135deg, #5599cc, #3377aa);
-}
-
-.about-heart-content {
-    position: relative;
-    z-index: 1;
-    transition: color 0.45s ease;
-}
-.about-heart-card h3 { transition: color 0.45s ease; }
-.about-heart-card p { transition: color 0.45s ease; }
-
-.about-heart-card:hover h3,
-.about-heart-card:hover p {
-    color: #fff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-
-.about-heart-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    font-size: 1.4rem;
-    color: #fff;
-    margin-bottom: 16px;
-    transition: background 0.45s ease, box-shadow 0.45s ease;
-}
-.about-heart-card:nth-of-type(1) .about-heart-icon {
-    background: linear-gradient(135deg, #cc785c, #b8553e);
-    box-shadow: 0 4px 12px rgba(204, 120, 92, 0.30);
-}
-.about-heart-card:nth-of-type(2) .about-heart-icon {
-    background: linear-gradient(135deg, #5599cc, #3377aa);
-    box-shadow: 0 4px 12px rgba(85, 153, 204, 0.30);
-}
-.about-heart-card:hover .about-heart-icon {
-    background: #fff;
-    color: #141413;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
-}
+/* ─── 关于页面·悬停展开卡片（已改用 Tailwind CSS group-hover） ────────────────────────── */
+footer {
     background-color: var(--surface-dark);
     color: var(--on-dark-soft);
     padding: 48px 32px;
