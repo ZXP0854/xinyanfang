@@ -44,6 +44,7 @@ class Tutorial(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     node_id = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    category = db.Column(db.String(20), default='workflow', index=True)  # 'workflow' | 'aesthetics'
     title = db.Column(db.String(200), nullable=False)
     summary = db.Column(db.Text, default='')
     content = db.Column(db.Text, default='')          # HTML 富文本内容
@@ -57,6 +58,7 @@ class Tutorial(db.Model):
         return {
             'id': self.id,
             'node_id': self.node_id,
+            'category': self.category,
             'title': self.title,
             'summary': self.summary,
             'content': self.content,
@@ -104,6 +106,7 @@ class Card(db.Model):
     description = db.Column(db.Text, default='')
     icon = db.Column(db.String(100), default='fa-solid fa-star')      # Font Awesome 图标类名
     tag = db.Column(db.String(100), default='')
+    category = db.Column(db.String(50), default='', index=True)         # 筛选分类：Mplus语句/拆解/方法/素材
     height = db.Column(db.Integer, default=200)                        # 卡片图片区高度（px）
     image_url = db.Column(db.String(500), default='')                  # 自定义图片URL（可选）
     tutorial_title = db.Column(db.String(200), default='')             # 关联的教程标题
@@ -119,6 +122,7 @@ class Card(db.Model):
             'description': self.description,
             'icon': self.icon,
             'tag': self.tag,
+            'category': self.category,
             'height': self.height,
             'image_url': self.image_url,
             'tutorial_title': self.tutorial_title,

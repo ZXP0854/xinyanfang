@@ -8,7 +8,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, current_app
 from models import db, Tutorial, Resource, Card, Upload, AuditLog
 from auth import admin_required, _log_audit
-from utils import save_upload, delete_upload_file, allowed_file
+from utils import save_upload, delete_upload_file, allowed_file, convert_docx_with_images
 from middleware import sanitize_input, sanitize_html, validate_required
 
 admin_bp = Blueprint('admin', __name__)
@@ -75,7 +75,7 @@ def dashboard():
 @admin_required
 def tutorial_list():
     """教程列表页"""
-    tutorials = Tutorial.query.order_by(Tutorial.node_id).all()
+    tutorials = Tutorial.query.filter_by(category='workflow').order_by(Tutorial.node_id).all()
     return render_template('admin/tutorial_list.html', tutorials=tutorials)
 
 
@@ -88,6 +88,25 @@ def tutorial_edit(tutorial_id=None):
     if tutorial_id:
         tutorial = Tutorial.query.get_or_404(tutorial_id)
     return render_template('admin/tutorial_edit.html', tutorial=tutorial)
+
+
+@admin_bp.route('/admin/aesthetics')
+@admin_required
+def aesthetic_list():
+    """审美教程列表页"""
+    tutorials = Tutorial.query.filter_by(category='aesthetics').order_by(Tutorial.sort_order).all()
+    return render_template('admin/aesthetic_list.html', tutorials=tutorials)
+
+
+@admin_bp.route('/admin/aesthetics/new')
+@admin_bp.route('/admin/aesthetics/<int:tutorial_id>/edit')
+@admin_required
+def aesthetic_edit(tutorial_id=None):
+    """创建/编辑审美教程页"""
+    tutorial = None
+    if tutorial_id:
+        tutorial = Tutorial.query.get_or_404(tutorial_id)
+    return render_template('admin/aesthetic_edit.html', tutorial=tutorial)
 
 
 @admin_bp.route('/admin/resources')
@@ -143,6 +162,7 @@ def api_tutorial_create():
 
     t = Tutorial(
         node_id=data['node_id'].strip(),
+        category=data.get('category', 'workflow'),
         title=data['title'].strip(),
         summary=sanitize_html(data.get('summary', '')[:500]),
         content=data.get('content', ''),
@@ -169,6 +189,8 @@ def api_tutorial_update(tutorial_id):
 
     if 'node_id' in data:
         t.node_id = data['node_id'].strip()
+    if 'category' in data:
+        t.category = data['category'].strip()
     if 'title' in data:
         t.title = data['title'].strip()
     if 'summary' in data:
@@ -301,6 +323,7 @@ def api_card_create():
         description=data.get('description', '')[:500],
         icon=data.get('icon', 'fa-solid fa-star'),
         tag=data.get('tag', ''),
+        category=data.get('category', ''),
         height=data.get('height', 200),
         image_url=data.get('image_url', ''),
         tutorial_title=data.get('tutorial_title', ''),
@@ -321,7 +344,7 @@ def api_card_update(card_id):
     if not data:
         return jsonify({'error': '请提供 JSON 数据'}), 400
 
-    for field in ['title', 'description', 'icon', 'tag', 'height', 'image_url',
+    for field in ['title', 'description', 'icon', 'tag', 'category', 'height', 'image_url',
                    'tutorial_title', 'link_url', 'sort_order', 'is_published']:
         if field in data:
             val = data[field]
@@ -393,3 +416,50 @@ def api_upload_delete(upload_id):
     db.session.delete(upload)
     db.session.commit()
     return jsonify({'message': '文件已删除'}), 200
+
+
+@admin_bp.route('/api/admin/convert-docx', methods=['POST'])
+@admin_required
+def api_convert_docx():
+    """上传 .docx 并转换为 HTML"""
+    if 'file' not in request.files:
+        return jsonify({'error': '未选择文件'}), 400
+
+    file = request.files['file']
+    if not file.filename or not file.filename.lower().endswith('.docx'):
+        return jsonify({'error': '仅支持 .docx 文件'}), 400
+
+    # 先保存文件
+    result = save_upload(file)
+    if not result['success']:
+        return jsonify({'error': result['error']}), 400
+
+    # 记录上传
+    upload = Upload(
+        filename=result['filename'],
+        original_name=result['original_name'],
+        mime_type=result['mime_type'],
+        file_size=result['size'],
+        file_type='document',
+        relative_path=result['relative_path'],
+    )
+    db.session.add(upload)
+    db.session.commit()
+
+    # 转换（含图片提取）
+    upload_folder = current_app.config.get('UPLOAD_FOLDER')
+    conversion = convert_docx_with_images(result['path'], upload_folder)
+
+    if not conversion['success']:
+        return jsonify({'error': conversion['error']}), 500
+
+    _log_audit(session.get('admin_user_id'), 'convert_docx',
+               target_type='upload', target_id=upload.id,
+               detail=f'file={result["original_name"]}')
+
+    return jsonify({
+        'html': conversion['html'],
+        'images': conversion.get('images', []),
+        'warnings': conversion.get('warnings', []),
+        'upload': upload.to_dict(),
+    }), 201

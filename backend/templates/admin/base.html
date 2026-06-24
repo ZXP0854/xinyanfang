@@ -86,6 +86,9 @@
             <a href="{{ url_for('admin.tutorial_list') }}" class="{{ 'active' if '/admin/tutorials' in request.path }}">
                 <i class="fa-solid fa-book-open"></i> 教程管理
             </a>
+            <a href="{{ url_for('admin.aesthetic_list') }}" class="{{ 'active' if '/admin/aesthetics' in request.path }}">
+                <i class="fa-solid fa-palette"></i> 审美教程
+            </a>
             <a href="{{ url_for('admin.resource_list') }}" class="{{ 'active' if '/admin/resources' in request.path }}">
                 <i class="fa-solid fa-link"></i> 资源链接
             </a>

@@ -56,11 +56,21 @@ def seed_tutorials():
         ('5-1-2', 'Gemini辅助图表生成与数据解读', '数据解读缺乏思路、表述不规范，用Gemini生成图表并自动撰写符合心理学学术规范的数据解读，从数字到文字无缝衔接，让结果陈述更加规范有力。'),
         ('5-2', 'ChatGPT定制目标期刊写作模板', '写作模板千篇一律、期刊风格难把握，用ChatGPT检索目标心理学期刊文献并生成个性化写作模板，匹配期刊特色，让研究报告撰写更有针对性。'),
         ('5-3', 'Gemini一键修订论文格式规范', '论文格式反复修改、细节易遗漏，用Gemini一键识别并修正格式问题，从引用规范到排版细节全面把关，让论文格式符合心理学论文发表要求。'),
-    ]
+    
+        # 审美教程
+        ('ae-1', '实验设计拆解：随机对照试验的优雅之处', '深入分析经典RCT设计的逻辑结构，理解控制变量与随机化的精妙平衡，配合Mplus语句教学掌握数据分析要领。'),
+        ('ae-2', '多变量分析中的视觉叙事', '学习如何用图表讲述数据故事——从散点图到结构方程模型的可视化，拆解复杂数据关系的呈现技巧。'),
+        ('ae-3', '引言写作：从漏斗到聚焦', '拆解顶级期刊引言的"漏斗结构"——从宏观背景自然过渡到具体研究问题，掌握学术写作的核心方法。'),
+        ('ae-4', '理论框架的构建艺术', '如何整合已有理论构建研究假设——中介、调节与有调节的中介模型，系统梳理方法学素材。'),
+        ('ae-5', '讨论部分的深度与广度', '优秀讨论的要素：结果解读、理论贡献、实践意义与研究局限的平衡，提供写作方法指导。'),
+        ('ae-6', '纵向研究设计的逻辑链条', '追踪研究中的时间维度设计——交叉滞后模型与潜在增长模型的对比解析，附Mplus语句实操。'),
+        ('ae-7', '量表开发与验证的方法学标准', '从条目生成到探索性/验证性因子分析——严谨量表开发的全流程审阅与拆解教学。'),
+        ('ae-8', '元分析报告的规范性表达', 'PRISMA流程图、森林图与发表偏倚检验——元分析论文的视觉标准与素材积累。'),
+]
 
     for node_id, title, desc in tutorials:
         content = f'<div class="tutorial-rich"><div class="rich-divider"></div><div class="rich-block"><div class="rich-text"><h4>{title}</h4><p>{desc}</p></div></div></div>'
-        t = Tutorial(node_id=node_id, title=title, summary=desc[:500], content=content, is_published=True)
+        t = Tutorial(node_id=node_id, title=title, summary=desc[:500], content=content, category="workflow", is_published=True)
         db.session.add(t)
 
     db.session.commit()
@@ -136,6 +146,17 @@ def seed_cards():
         {'title': '元分析', 'description': '系统综述与元分析：从文献检索到效应量计算', 'icon': 'fa-solid fa-magnifying-glass-chart', 'tag': '元分析', 'height': 230},
     ]
 
+    # 分类映射
+    card_categories = {
+        '实验设计': 'Mplus语句',
+        '数据可视化': '拆解',
+        '学术写作': '方法',
+        '统计方法': '拆解',
+        '测量工具': '素材',
+        '开放科学': '素材',
+        '脑成像方法': '方法',
+        '元分析': '素材',
+    }
     for i, c in enumerate(cards):
         db.session.add(Card(
             title=c['title'],
@@ -143,6 +164,7 @@ def seed_cards():
             icon=c['icon'],
             tag=c['tag'],
             height=c['height'],
+            category=card_categories.get(c['tag'], ''),
             sort_order=i,
             is_published=True,
         ))

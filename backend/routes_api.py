@@ -17,13 +17,12 @@ api_bp = Blueprint('api', __name__)
 @api_bp.route('/api/tutorials', methods=['GET'])
 @rate_limit(max_requests=120, window_seconds=60)
 def get_tutorials():
-    """获取所有已发布的教程列表"""
-    tutorials = (
-        Tutorial.query
-        .filter_by(is_published=True)
-        .order_by(Tutorial.sort_order, Tutorial.node_id)
-        .all()
-    )
+    """获取所有已发布的教程列表（支持 ?category=workflow|aesthetics 过滤）"""
+    query = Tutorial.query.filter_by(is_published=True)
+    cat = request.args.get('category', None)
+    if cat:
+        query = query.filter_by(category=cat)
+    tutorials = query.order_by(Tutorial.sort_order, Tutorial.node_id).all()
     return jsonify({
         'tutorials': [t.to_dict() for t in tutorials],
         'total': len(tutorials),

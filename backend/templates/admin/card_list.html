@@ -4,16 +4,27 @@
 {% block content %}
 
 <div class="card" style="margin-bottom:20px;" id="new">
-    <h3 style="margin-bottom:16px;">添加卡片</h3>
+    <h3 style="margin-bottom:16px;" id="formTitle">添加卡片</h3>
     <form id="cardForm">
+        <input type="hidden" id="c_id" value="">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
             <div class="form-group">
                 <label for="c_title">标题 *</label>
                 <input type="text" id="c_title" placeholder="卡片标题" required>
             </div>
             <div class="form-group">
-                <label for="c_tag">分类标签</label>
+                <label for="c_tag">标签文字</label>
                 <input type="text" id="c_tag" placeholder="例如: 实验设计">
+            </div>
+            <div class="form-group">
+                <label for="c_category">筛选分类</label>
+                <select id="c_category">
+                    <option value="">-- 选择分类 --</option>
+                    <option value="Mplus语句">Mplus语句</option>
+                    <option value="拆解">拆解</option>
+                    <option value="方法">方法</option>
+                    <option value="素材">素材</option>
+                </select>
             </div>
             <div class="form-group" style="grid-column:1/-1;">
                 <label for="c_description">描述</label>
@@ -28,6 +39,14 @@
                 <input type="number" id="c_height" value="200" min="150" max="400">
             </div>
             <div class="form-group">
+                <label for="c_image">卡片配图</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="file" id="c_image" accept="image/*">
+                    <span id="c_image_preview" style="font-size:0.8rem;"></span>
+                </div>
+                <input type="hidden" id="c_image_url" value="">
+            </div>
+            <div class="form-group">
                 <label for="c_tutorial">关联教程标题</label>
                 <input type="text" id="c_tutorial" placeholder="留空则不可点击">
             </div>
@@ -36,24 +55,32 @@
                 <input type="text" id="c_link" placeholder="https://...">
             </div>
         </div>
-        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> 添加</button>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fa-solid fa-plus"></i> 添加</button>
+            <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none;" onclick="cancelEdit()">取消编辑</button>
+        </div>
     </form>
 </div>
 
 <div class="card" style="padding:0;">
     {% if cards %}
     <table>
-        <thead><tr><th>图标</th><th>标题</th><th>标签</th><th>高度</th><th>关联</th><th>操作</th></tr></thead>
+        <thead><tr><th>配图</th><th>图标</th><th>标题</th><th>标签</th><th>分类</th><th>高度</th><th>关联</th><th>操作</th></tr></thead>
         <tbody>
         {% for c in cards %}
         <tr>
+            <td>
+                {% if c.image_url %}<img src="{{ c.image_url }}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;">{% else %}-{% endif %}
+            </td>
             <td><i class="{{ c.icon }}"></i></td>
-            <td>{{ c.title[:40] }}</td>
+            <td>{{ c.title[:30] }}</td>
             <td><span class="badge badge-muted">{{ c.tag or '-' }}</span></td>
+            <td>{% if c.category %}<span class="badge badge-success">{{ c.category }}</span>{% else %}-{% endif %}</td>
             <td>{{ c.height }}px</td>
-            <td>{{ c.tutorial_title or c.link_url[:30] or '-' }}</td>
+            <td>{{ c.tutorial_title or c.link_url[:20] or '-' }}</td>
             <td>
                 <div class="actions">
+                    <button onclick="editCard({{ c.id }})" class="btn btn-secondary btn-sm"><i class="fa-solid fa-pen"></i></button>
                     <button onclick="deleteCard({{ c.id }})" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </td>
@@ -69,20 +96,48 @@
 {% endblock %}
 {% block scripts %}
 <script>
+const allCards = {{ cards | map(attribute='id') | list | tojson }};
+
+// 图片上传 → 自动填入 image_url
+document.getElementById('c_image').addEventListener('change', async function() {
+    if (!this.files.length) return;
+    const formData = new FormData();
+    formData.append('file', this.files[0]);
+    document.getElementById('c_image_preview').textContent = '上传中...';
+    try {
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('c_image_url').value = data.upload.url;
+            document.getElementById('c_image_preview').innerHTML = '<span style="color:var(--success);">已上传: ' + data.upload.original_name + '</span>';
+        } else {
+            document.getElementById('c_image_preview').innerHTML = '<span style="color:#d1523c;">' + data.error + '</span>';
+        }
+    } catch(err) {
+        document.getElementById('c_image_preview').innerHTML = '<span style="color:#d1523c;">网络错误</span>';
+    }
+});
+
+// 表单提交：创建或更新
 document.getElementById('cardForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const cid = document.getElementById('c_id').value;
     const data = {
         title: document.getElementById('c_title').value.trim(),
         description: document.getElementById('c_description').value.trim(),
         icon: document.getElementById('c_icon').value.trim(),
         tag: document.getElementById('c_tag').value.trim(),
+        category: document.getElementById('c_category').value,
         height: parseInt(document.getElementById('c_height').value) || 200,
+        image_url: document.getElementById('c_image_url').value,
         tutorial_title: document.getElementById('c_tutorial').value.trim(),
         link_url: document.getElementById('c_link').value.trim(),
     };
+    const url = cid ? '/api/admin/cards/' + cid : '/api/admin/cards';
+    const method = cid ? 'PUT' : 'POST';
     try {
-        const res = await fetch('/api/admin/cards', {
-            method: 'POST',
+        const res = await fetch(url, {
+            method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
@@ -90,6 +145,40 @@ document.getElementById('cardForm').addEventListener('submit', async (e) => {
         else { const d = await res.json(); alert('错误: ' + d.error); }
     } catch(err) { alert('网络错误: ' + err.message); }
 });
+
+// 编辑：填入表单
+async function editCard(id) {
+    try {
+        const res = await fetch('/api/admin/cards');
+        const data = await res.json();
+        const card = data.cards.find(c => c.id === id);
+        if (!card) return;
+        document.getElementById('c_id').value = card.id;
+        document.getElementById('c_title').value = card.title;
+        document.getElementById('c_description').value = card.description || '';
+        document.getElementById('c_icon').value = card.icon;
+        document.getElementById('c_tag').value = card.tag || '';
+        document.getElementById('c_category').value = card.category || '';
+        document.getElementById('c_height').value = card.height;
+        document.getElementById('c_image_url').value = card.image_url || '';
+        document.getElementById('c_tutorial').value = card.tutorial_title || '';
+        document.getElementById('c_link').value = card.link_url || '';
+        document.getElementById('formTitle').textContent = '编辑卡片';
+        document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-check"></i> 更新';
+        document.getElementById('cancelBtn').style.display = '';
+        document.getElementById('new').scrollIntoView({behavior:'smooth'});
+    } catch(e) { alert('加载卡片失败: ' + e.message); }
+}
+
+function cancelEdit() {
+    document.getElementById('c_id').value = '';
+    document.getElementById('cardForm').reset();
+    document.getElementById('c_image_url').value = '';
+    document.getElementById('c_image_preview').textContent = '';
+    document.getElementById('formTitle').textContent = '添加卡片';
+    document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-plus"></i> 添加';
+    document.getElementById('cancelBtn').style.display = 'none';
+}
 
 async function deleteCard(id) {
     if (!confirm('确定要删除这张卡片吗？')) return;

@@ -129,6 +129,70 @@ def delete_upload_file(filename: str) -> bool:
         return False
 
 
+# ─── Word 文档转换 ──────────────────────────────────────────────
+
+def convert_docx_to_html(filepath: str) -> dict:
+    """
+    将 .docx 文件转换为 HTML（纯文本格式，不含图片）
+    返回: {'success': bool, 'html': str, 'warnings': list, 'error': str}
+    """
+    try:
+        import mammoth
+        with open(filepath, 'rb') as f:
+            result = mammoth.convert_to_html(f)
+        return {
+            'success': True,
+            'html': result.value,
+            'warnings': [str(m) for m in result.messages],
+        }
+    except ImportError:
+        return {'success': False, 'error': 'mammoth 库未安装，请运行: pip install mammoth'}
+    except Exception as e:
+        return {'success': False, 'error': f'文档转换失败: {str(e)}'}
+
+
+def convert_docx_with_images(filepath: str, upload_folder: str, base_url: str = '/static/uploads/') -> dict:
+    """
+    将 .docx 转换为 HTML，并提取内嵌图片到 upload_folder
+    img src 替换为上传后的 URL
+    返回: {'success': bool, 'html': str, 'images': list, 'error': str}
+    """
+    try:
+        import mammoth
+        import re
+
+        image_list = []
+
+        def convert_image(image):
+            ext = image.content_type.split('/')[-1] if image.content_type else 'png'
+            if ext == 'jpeg':
+                ext = 'jpg'
+            unique_name = (
+                f"docx_img_{datetime.now().strftime('%Y%m%d_%H%M%S')}_"
+                f"{uuid.uuid4().hex[:8]}.{ext}"
+            )
+            save_path = os.path.join(upload_folder, unique_name)
+            with open(save_path, 'wb') as f:
+                f.write(image.open().read())
+            url = f'{base_url}{unique_name}'
+            image_list.append(url)
+            return {'src': url}
+
+        with open(filepath, 'rb') as f:
+            result = mammoth.convert_to_html(f, convert_image=mammoth.images.img_element(convert_image))
+
+        return {
+            'success': True,
+            'html': result.value,
+            'images': image_list,
+            'warnings': [str(m) for m in result.messages],
+        }
+    except ImportError:
+        return {'success': False, 'error': 'mammoth 库未安装，请运行: pip install mammoth'}
+    except Exception as e:
+        return {'success': False, 'error': f'文档转换失败: {str(e)}'}
+
+
 # ─── 日志配置 ──────────────────────────────────────────────────
 
 def setup_logging(app):

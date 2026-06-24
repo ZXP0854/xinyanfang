@@ -69,6 +69,8 @@ def _run_migrations(db):
     from sqlalchemy import text
     migrations = [
         "ALTER TABLE uploads ADD COLUMN file_type VARCHAR(20) DEFAULT 'document'",
+        "ALTER TABLE tutorials ADD COLUMN category VARCHAR(20) DEFAULT 'workflow'",
+        "ALTER TABLE cards ADD COLUMN category VARCHAR(50) DEFAULT ''",
     ]
     for sql in migrations:
         try:

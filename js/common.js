@@ -861,11 +861,48 @@ function initBlurText() {
     });
 }
 
+function loadAestheticCards() {
+    const masonry = document.querySelector('.masonry');
+    if (!masonry) return;
+
+    fetch('/api/cards')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.cards || !data.cards.length) return;
+            masonry.innerHTML = '';
+            data.cards.forEach(card => {
+                const el = document.createElement('a');
+                el.href = '#';
+                el.className = 'masonry-card';
+                el.setAttribute('data-category', card.category || '');
+
+                const imgHtml = card.image_url
+                    ? '<div class="masonry-img" style="height:' + card.height + 'px;"><img src="' + card.image_url + '" style="width:100%;height:100%;object-fit:cover;" alt="' + card.title + '"></div>'
+                    : '<div class="masonry-img" style="height:' + card.height + 'px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:rgba(255,255,255,0.7)"><i class="' + card.icon + '"></i></div>';
+
+                const target = card.tutorial_title
+                    ? 'onclick="openTutorial(\'' + card.tutorial_title.replace(/'/g, "\\'") + '\');return false"'
+                    : (card.link_url ? 'href="' + card.link_url + '" target="_blank"' : '');
+
+                el.setAttribute('onclick', card.tutorial_title
+                    ? 'openTutorial(\'' + card.tutorial_title.replace(/'/g, "\\'") + '\');return false'
+                    : '');
+
+                el.innerHTML = imgHtml +
+                    '<div class="masonry-body"><h4>' + card.title + '</h4><p>' + card.description + '</p><span class="tag">' + (card.tag || '') + '</span></div>';
+                masonry.appendChild(el);
+            });
+            setTimeout(() => initMasonryReveal(), 50);
+        })
+        .catch(() => {});
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (!window.location.pathname.includes('index.html') && !window.location.pathname.endsWith('/')) {
         checkLogin();
     }
     highlightNav();
+    loadAestheticCards();
     initAestheticFilter();
     initMasonryReveal();
     initScrollStack();

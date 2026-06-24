@@ -6,7 +6,7 @@
     <title>心研坊 · 教程</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="stylesheet" href="css/style.css?v=5">
     <style>
         .tutorial-page-container {
             max-width: 800px;
@@ -72,13 +72,30 @@
         <span>开发共建中</span>
     </div>
 </footer>
-<script src="js/common.js?v=4"></script>
+<script src="js/common.js?v=5"></script>
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const title = urlParams.get('title');
     if (title) {
-        document.getElementById('tutorial-title').textContent = decodeURIComponent(title);
-        document.getElementById('tutorial-desc').textContent = '「' + decodeURIComponent(title) + '」的详细教程正在建设中，敬请期待……';
+        const decodedTitle = decodeURIComponent(title);
+        document.getElementById('tutorial-title').textContent = decodedTitle;
+        // 尝试从 API 加载教程内容
+        fetch('/api/tutorials/by-title/' + encodeURIComponent(decodedTitle))
+            .then(res => res.json())
+            .then(data => {
+                if (data.tutorial && data.tutorial.content) {
+                    document.querySelector('.tutorial-placeholder').innerHTML =
+                        '<h2 style="margin-bottom:1rem;">' + data.tutorial.title + '</h2>' +
+                        data.tutorial.content;
+                } else {
+                    document.getElementById('tutorial-desc').textContent =
+                        '「' + decodedTitle + '」的详细教程正在建设中，敬请期待……';
+                }
+            })
+            .catch(() => {
+                document.getElementById('tutorial-desc').textContent =
+                    '「' + decodedTitle + '」的详细教程正在建设中，敬请期待……';
+            });
     }
 </script>
 </body>
