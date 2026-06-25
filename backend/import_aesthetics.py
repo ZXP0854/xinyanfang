@@ -16,30 +16,31 @@ import mammoth
 from app import create_app
 from models import db, Tutorial, Card, Upload
 
-# ── 18个审美教程映射（关键词 → 标题 → 分类） ──
+# ── 18个审美教程映射（文件大小(字节) → 标题 → 分类 → 扩展名） ──
+# 文件大小用于精确匹配（宝塔面板上传时会重命名，中文文件名丢失）
 TUTORIALS = [
     # Mplus语句（5个DOCX）
-    ('BCHfx',               'BCH分析',                                              'Mplus语句'),
-    ('dccjgfcmx',           '多层次结构方程模型',                                    'Mplus语句'),
-    ('djhxdqzzmx',          '带交互项的潜增长模型',                                  'Mplus语句'),
-    ('dx+lhqlbzzmx',        '单项+联合潜类别增长模型',                               'Mplus语句'),
-    ('jczhmx',              '交叉滞后模型',                                          'Mplus语句'),
+    (10772,    'BCH分析',                           'Mplus语句', '.docx'),
+    (10839,    '多层次结构方程模型',                   'Mplus语句', '.docx'),
+    (15843,    '带交互项的潜增长模型',                  'Mplus语句', '.docx'),
+    (12743,    '单项+联合潜类别增长模型',               'Mplus语句', '.docx'),
+    (10730,    '交叉滞后模型',                        'Mplus语句', '.docx'),
     # 拆解（6个PDF）
-    ('xlkxjzqkfx',          '《心理科学进展》期刊分析',                              '拆解'),
-    ('zdzwqkbt',            '重点中文期刊标题、摘要、关键词分析',                     '拆解'),
-    ('zdzwqkffjgfx',        '重点中文期刊方法结果分析',                               '拆解'),
-    ('zdzwqkjcxxfx',        '重点中文期刊基础信息分析',                               '拆解'),
-    ('zdzwqktlfx',          '重点中文期刊讨论分析',                                  '拆解'),
-    ('zdzwqkyyfx',          '重点中文期刊引言分析',                                  '拆解'),
+    (2609909,  '《心理科学进展》期刊分析',              '拆解', '.pdf'),
+    (5596740,  '重点中文期刊标题、摘要、关键词分析',      '拆解', '.pdf'),
+    (8365071,  '重点中文期刊方法结果分析',               '拆解', '.pdf'),
+    (6689501,  '重点中文期刊基础信息分析',               '拆解', '.pdf'),
+    (10203726, '重点中文期刊讨论分析',                  '拆解', '.pdf'),
+    (19579742, '重点中文期刊引言分析',                  '拆解', '.pdf'),
     # 方法（6个PDF）
-    ('jczhjhpxqblzzdyyjtlxzsl', '交叉滞后+平行潜变量增长的引言及讨论写作思路（文献）', '方法'),
-    ('jczhjhpxqzzdyyjtlxzsl',   '交叉滞后+平行潜变量增长的引言及讨论写作思路',         '方法'),
-    ('xlxbsgyjhf',              '心理学报审稿意见回复',                               '方法'),
-    ('ywhxlwxtjqkxz',           '英文核心论文选题及期刊选择',                         '方法'),
-    ('ywhxqkjfblcjs',           '英文核心期刊及发表流程介绍',                         '方法'),
-    ('ZxywWXZS',                '撰写英文文献综述',                                  '方法'),
+    (903530,   '交叉滞后+平行潜变量增长的引言及讨论写作思路（文献）', '方法', '.pdf'),
+    (2743761,  '交叉滞后+平行潜变量增长的引言及讨论写作思路',       '方法', '.pdf'),
+    (18676832, '心理学报审稿意见回复',                             '方法', '.pdf'),
+    (7105662,  '英文核心论文选题及期刊选择',                       '方法', '.pdf'),
+    (21119026, '英文核心期刊及发表流程介绍',                       '方法', '.pdf'),
+    (21129977, '撰写英文文献综述',                                '方法', '.pdf'),
     # 素材（1个DOCX）
-    ('ywlwzyylsck',         '英文论文摘要语料素材库',                                 '素材'),
+    (48789,    '英文论文摘要语料素材库',               '素材', '.docx'),
 ]
 
 # ── 分类 → 图标 + 卡片配图 ──
@@ -68,13 +69,18 @@ uploads_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static',
 app = create_app('production')
 
 
-def find_file(keyword):
-    """在 uploads 目录中搜索匹配文件（忽略大小写）"""
+def find_file(size, ext):
+    """在 uploads 目录中按文件大小+扩展名精确匹配（宝塔上传会重命名文件）"""
     if not os.path.isdir(uploads_dir):
         return None
     for fname in os.listdir(uploads_dir):
-        if keyword.lower() in fname.lower():
-            return os.path.join(uploads_dir, fname)
+        fpath = os.path.join(uploads_dir, fname)
+        if not os.path.isfile(fpath):
+            continue
+        fsize = os.path.getsize(fpath)
+        fext = os.path.splitext(fname)[1].lower()
+        if fsize == size and fext == ext:
+            return fpath
     return None
 
 
@@ -119,13 +125,13 @@ with app.app_context():
     failed = 0
     errors = []
 
-    for keyword, title, category in TUTORIALS:
+    for size, title, category, ext in TUTORIALS:
         print(f'\n[{created+skipped+failed+1}/{len(TUTORIALS)}] {title}')
         try:
-            # 2a) 查找文件
-            filepath = find_file(keyword)
+            # 2a) 按文件大小精确匹配
+            filepath = find_file(size, ext)
             if not filepath:
-                print(f'  [SKIP] 未找到文件（关键词: {keyword}）')
+                print(f'  [SKIP] 未找到 {ext} 文件（大小: {size} 字节）')
                 skipped += 1
                 continue
 
