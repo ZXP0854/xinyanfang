@@ -3,44 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>心研坊 · 教程</title>
+    <title>心研坊 · 教程详情</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=9">
-    <style>
-        .tutorial-page-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-            text-align: center;
-        }
-        .tutorial-placeholder {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 3rem 2rem;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-        }
-        .tutorial-placeholder .tp-icon {
-            font-size: 3rem;
-            color: var(--primary);
-            margin-bottom: 1rem;
-        }
-        .back-btn {
-            display: inline-block;
-            padding: 0.7rem 2rem;
-            border-radius: 50px;
-            background: var(--primary);
-            color: #fff;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border: none;
-            transition: all var(--transition);
-        }
-        .back-btn:hover { background: var(--primary-active); transform: translateY(-2px); }
-    </style>
+    <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
 <div class="top-nav">
@@ -58,45 +24,135 @@
         <a href="about.html">关于与简介</a>
     </div>
 </div>
-<div class="tutorial-page-container">
-    <div class="tutorial-placeholder">
-        <div class="tp-icon"><i class="fa-solid fa-book-open-reader"></i></div>
-        <h2 id="tutorial-title">教程页面</h2>
-        <p id="tutorial-desc">该教程内容正在建设中，敬请期待……</p>
-        <button class="back-btn" onclick="history.back()">← 返回上一页</button>
+
+<article class="article-container" id="article-container">
+    <div class="article-loading" id="article-loading">
+        <i class="fa-solid fa-spinner fa-pulse"></i>
+        <p>加载中……</p>
     </div>
-</div>
+    <div class="article-error" id="article-error" style="display:none;">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <p id="article-error-msg">教程加载失败</p>
+        <a href="javascript:history.back()" class="article-back-link">← 返回</a>
+    </div>
+    <div id="article-content" style="display:none;">
+        <header class="article-header">
+            <span class="article-category" id="article-category"></span>
+            <h1 class="article-title" id="article-title"></h1>
+            <div class="article-meta">
+                <span>心研坊</span>
+                <span class="article-date" id="article-date"></span>
+            </div>
+        </header>
+        <div class="article-body" id="article-body"></div>
+        <footer class="article-footer">
+            <a href="javascript:history.back()" class="article-back-link">← 返回</a>
+        </footer>
+    </div>
+</article>
+
 <footer>
     <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
         <span>心研坊 · 心理学研究方法辅助平台</span>
         <span>开发共建中</span>
     </div>
 </footer>
-<script src="js/common.js?v=9"></script>
+
+<div id="image-modal" class="image-modal" aria-hidden="true">
+    <div class="modal-box">
+        <button class="modal-close" aria-label="关闭">&times;</button>
+        <img class="modal-img" src="" alt="">
+    </div>
+</div>
+
+<script src="js/common.js?v=10"></script>
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const title = urlParams.get('title');
-    if (title) {
-        const decodedTitle = decodeURIComponent(title);
-        document.getElementById('tutorial-title').textContent = decodedTitle;
-        // 尝试从 API 加载教程内容
-        fetch('/api/tutorials/by-title/' + encodeURIComponent(decodedTitle))
-            .then(res => res.json())
-            .then(data => {
-                if (data.tutorial && data.tutorial.content) {
-                    document.querySelector('.tutorial-placeholder').innerHTML =
-                        '<h2 style="margin-bottom:1rem;">' + data.tutorial.title + '</h2>' +
-                        data.tutorial.content;
-                } else {
-                    document.getElementById('tutorial-desc').textContent =
-                        '「' + decodedTitle + '」的详细教程正在建设中，敬请期待……';
-                }
-            })
-            .catch(() => {
-                document.getElementById('tutorial-desc').textContent =
-                    '「' + decodedTitle + '」的详细教程正在建设中，敬请期待……';
-            });
+(function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var title = urlParams.get('title');
+
+    if (!title) {
+        document.getElementById('article-loading').style.display = 'none';
+        document.getElementById('article-error').style.display = 'block';
+        document.getElementById('article-error-msg').textContent = '未指定教程标题';
+        return;
     }
+
+    var decodedTitle = decodeURIComponent(title);
+    document.title = decodedTitle + ' · 心研坊';
+    document.getElementById('article-title').textContent = decodedTitle;
+
+    fetch('/api/tutorials/by-title/' + encodeURIComponent(decodedTitle))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.tutorial || !data.tutorial.content) {
+                throw new Error('暂无内容');
+            }
+            render(data.tutorial);
+        })
+        .catch(function(e) {
+            document.getElementById('article-loading').style.display = 'none';
+            document.getElementById('article-error').style.display = 'block';
+            document.getElementById('article-error-msg').textContent =
+                '「' + decodedTitle + '」的教程正在建设中……';
+        });
+
+    function render(t) {
+        document.getElementById('article-loading').style.display = 'none';
+        document.getElementById('article-content').style.display = 'block';
+
+        var cat = t.category || '';
+        document.getElementById('article-category').textContent =
+            cat === 'aesthetics' ? '提升科研审美' :
+            cat === 'workflow' ? '科研流程' : cat;
+
+        if (t.updated_at || t.created_at) {
+            var d = new Date(t.updated_at || t.created_at);
+            document.getElementById('article-date').textContent =
+                d.getFullYear() + '-' +
+                String(d.getMonth()+1).padStart(2,'0') + '-' +
+                String(d.getDate()).padStart(2,'0');
+        }
+
+        var html = t.content || '';
+        var isPdf = html.indexOf('PDF') > -1 && html.indexOf('download') > -1;
+
+        if (isPdf) {
+            var m = html.match(/href="([^"]+\.pdf)"/);
+            var url = m ? m[1] : '';
+            var name = url.split('/').pop();
+            html = '<div class="apdf"><div class="apdf-bar">' +
+                '<span><i class="fa-solid fa-file-pdf"></i> ' + name + '</span>' +
+                '<a href="' + url + '" download class="apdf-dl"><i class="fa-solid fa-download"></i> 下载</a>' +
+                '</div><iframe src="' + url + '" class="apdf-iframe"></iframe>' +
+                '<p class="apdf-note">如无法预览，请<a href="' + url + '">点击下载</a>后本地查看。</p></div>';
+        } else {
+            html = html
+                .replace(/<div class="tutorial-rich">/g, '')
+                .replace(/<div class="rich-divider"><\/div>/g, '')
+                .replace(/<div class="rich-block">/g, '<div class="ablock">')
+                .replace(/<div class="rich-text">/g, '<div class="atext">')
+                .replace(/<\/div>\s*<\/div>\s*$/g, '</div>')
+                .replace(/<h4>/g, '<h3 class="ah3">')
+                .replace(/<\/h4>/g, '</h3>');
+            html = html.replace(/<img([^>]*)>/g, '<div class="aimg"><img$1></div>');
+        }
+
+        document.getElementById('article-body').innerHTML = html;
+
+        // 图片点击放大
+        [].forEach.call(document.querySelectorAll('.article-body img'), function(img) {
+            img.style.cursor = 'pointer';
+            img.addEventListener('click', function() {
+                var m = document.getElementById('image-modal');
+                m.querySelector('.modal-img').src = img.src;
+                m.classList.add('visible');
+                m.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+    }
+})();
 </script>
 </body>
 </html>
