@@ -162,18 +162,44 @@ function getRichContent(nodeId, nodeName) {
     </div>`;
 }
 
-// 渲染教程详情
+// 渲染教程详情（优先API，降级硬编码）
 function renderDetail(nodeId) {
     const node = treeData.find(n => n.id === nodeId);
     if (!node) return;
     const detailDiv = document.getElementById('tutorial-detail');
-    if (detailDiv) detailDiv.innerHTML = getTutorialTemplate(node.id, node.name);
+    if (!detailDiv) return;
+
+    // 高亮当前节点
     document.querySelectorAll('.tree-node-level1, .tree-node-level2').forEach(el => {
         if (el.getAttribute('data-id') === nodeId) el.classList.add('active');
         else el.classList.remove('active');
     });
-    // 为详情中的图片绑定模态放大交互
-    attachImageModalHandlers();
+
+    // 显示加载状态
+    detailDiv.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--muted)"><i class="fa-solid fa-spinner fa-pulse"></i><p>加载中……</p></div>';
+
+    // 从API加载
+    fetch('/api/tutorials/' + encodeURIComponent(nodeId))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.tutorial && data.tutorial.content) {
+                // API有内容 → 渲染
+                var html = data.tutorial.content;
+                // 移除旧的tutorial-rich包裹（API数据自带）
+                detailDiv.innerHTML =
+                    '<div class="detail-title"><h3 class="serif serif-xs">' + node.id + ' ' + node.name + '</h3></div>' +
+                    '<div>' + html + '</div>';
+            } else {
+                // 无API内容 → 降级到硬编码
+                detailDiv.innerHTML = getTutorialTemplate(node.id, node.name);
+            }
+            attachImageModalHandlers();
+        })
+        .catch(function() {
+            // 网络错误 → 降级
+            detailDiv.innerHTML = getTutorialTemplate(node.id, node.name);
+            attachImageModalHandlers();
+        });
 }
 
 // 图片模态交互：绑定和控制放大/关闭
