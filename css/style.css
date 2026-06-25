@@ -425,7 +425,7 @@ body {
     margin: 4px 0;
     cursor: default;
 }
-.detail-area { flex: 1; background: var(--canvas); border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.detail-area { flex: 1; min-width: 0; overflow: hidden; background: var(--canvas); border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 .detail-title { margin-bottom: 16px; border-bottom: 1px solid var(--hairline); padding-bottom: 12px; }
 
 /* 新增：MWQ 的 Hero 和 Section 样式（适配 txh 配色） */
@@ -823,6 +823,9 @@ body {
 .rich-figure .rich-figure-cap { font-size: 0.8rem; color: var(--muted); padding: 0 1rem; text-align: center; }
 .rich-text {
     font-size: 1rem;
+    overflow: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 .rich-text h4 {
     font-family: var(--font-serif), Georgia, serif;
@@ -852,10 +855,13 @@ body {
 .rich-text p { font-size: 1rem; line-height: 1.8; color: var(--body); margin-bottom: 0.6rem; }
 .rich-text ul { margin: 0.4rem 0 0 1.1rem; padding: 0; }
 .rich-text li { font-size: 0.95rem; line-height: 1.7; color: var(--body); margin-bottom: 0.3rem; }
-.rich-text img { max-width: 100%; height: auto; border-radius: 8px; display: block; }
+.rich-text img { max-width: 100% !important; height: auto !important; border-radius: 8px; display: block; }
+.rich-text video { max-width: 100% !important; }
 .rich-text table {
     border-collapse: collapse;
-    width: 100%;
+    max-width: 100%;
+    display: block;
+    overflow-x: auto;
     margin: 1rem 0;
     font-size: 0.9rem;
 }
