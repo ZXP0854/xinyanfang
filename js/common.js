@@ -932,19 +932,22 @@ function loadAestheticCards() {
                 el.className = 'masonry-card';
                 el.setAttribute('data-category', card.category || '');
 
-                const imgHtml = card.image_url
-                    ? '<div class="masonry-img" style="height:' + card.height + 'px;"><img src="' + card.image_url + '" style="width:100%;height:100%;object-fit:cover;" alt="' + card.title + '"></div>'
-                    : '<div class="masonry-img" style="height:' + card.height + 'px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:rgba(255,255,255,0.7)"><i class="' + card.icon + '"></i></div>';
+                const h = card.height || 220;
+                const iconHtml = '<i class="' + (card.icon || 'fa-solid fa-file') + '"></i>';
+                const iconDiv = '<div class="masonry-img" style="height:' + h + 'px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:rgba(255,255,255,0.7)">' + iconHtml + '</div>';
 
-                const target = card.tutorial_title
-                    ? 'onclick="openTutorial(\'' + card.tutorial_title.replace(/'/g, "\\'") + '\');return false"'
-                    : (card.link_url ? 'href="' + card.link_url + '" target="_blank"' : '');
+                var imgDiv;
+                if (card.image_url) {
+                    imgDiv = '<div class="masonry-img" style="height:' + h + 'px;"><img src="' + card.image_url + '" style="width:100%;height:100%;object-fit:cover;" alt="' + card.title + '" onerror="this.style.display=\'none\';this.parentElement.style.display=\'flex\';this.parentElement.style.alignItems=\'center\';this.parentElement.style.justifyContent=\'center\';this.parentElement.style.fontSize=\'2.5rem\';this.parentElement.style.color=\'rgba(255,255,255,0.7)\';this.parentElement.innerHTML=\'' + iconHtml + '\';"></div>';
+                } else {
+                    imgDiv = iconDiv;
+                }
 
                 el.setAttribute('onclick', card.tutorial_title
                     ? 'openTutorial(\'' + card.tutorial_title.replace(/'/g, "\\'") + '\');return false'
                     : '');
 
-                el.innerHTML = imgHtml +
+                el.innerHTML = imgDiv +
                     '<div class="masonry-body"><h4>' + card.title + '</h4><p>' + card.description + '</p><span class="tag">' + (card.tag || '') + '</span></div>';
                 masonry.appendChild(el);
             });

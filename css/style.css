@@ -672,6 +672,15 @@ body {
     display: block;
     background: linear-gradient(160deg, #d5cec4, #c0b8a8, #b8b0a0, #ccc4b6);
     object-fit: cover;
+    position: relative;
+    overflow: hidden;
+}
+.masonry-card .masonry-img img {
+    display: block;
+    transition: opacity 0.3s ease;
+}
+.masonry-card .masonry-img img[src] {
+    opacity: 1;
 }
 .masonry-card .masonry-body { padding: 1rem 1.1rem; }
 .masonry-card .masonry-body h4 { font-size: 0.95rem; font-weight: 600; color: var(--primary); margin-bottom: 0.3rem; }
