@@ -100,15 +100,7 @@ with app.app_context():
     for node_id, title in sorted(node_titles.items()):
         parts = []
 
-        # DOCX 内容（多个则合并）
-        docx_list = node_docx.get(node_id, [])
-        if docx_list:
-            for i, html in enumerate(docx_list):
-                if len(docx_list) > 1:
-                    parts.append(f'<h4>第{i+1}部分</h4>')
-                parts.append(html)
-
-        # 视频内嵌播放器（放在图文后面）
+        # 视频内嵌播放器（标题下方最前面）
         video_list = node_videos.get(node_id, [])
         if video_list:
             vtags = ''.join(
@@ -120,10 +112,18 @@ with app.app_context():
                 for v in video_list
             )
             parts.append(
-                f'<div class="rich-divider"></div>'
                 f'<h4><i class="fa-solid fa-play"></i> 配套视频教程</h4>'
                 f'{vtags}'
+                f'<div class="rich-divider"></div>'
             )
+
+        # DOCX 图文内容
+        docx_list = node_docx.get(node_id, [])
+        if docx_list:
+            for i, html in enumerate(docx_list):
+                if len(docx_list) > 1:
+                    parts.append(f'<h4>第{i+1}部分</h4>')
+                parts.append(html)
 
         full_html = '\n'.join(parts)
         if not full_html.strip():
