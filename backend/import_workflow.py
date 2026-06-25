@@ -100,6 +100,25 @@ with app.app_context():
     for node_id, title in sorted(node_titles.items()):
         parts = []
 
+        # 视频内嵌播放器（放在最前面）
+        video_list = node_videos.get(node_id, [])
+        if video_list:
+            vtags = ''.join(
+                f'<div style="margin-bottom:16px;">'
+                f'<video controls preload="metadata" '
+                f'style="width:100%;max-width:100%;border-radius:12px;display:block;" '
+                f'poster="/static/uploads/{v.replace(".mp4","")}.jpg">'
+                f'<source src="/static/uploads/{v}" type="video/mp4">'
+                f'</video></div>'
+                for v in video_list
+            )
+            parts.append(
+                f'<div class="tutorial-rich"><div class="rich-block"><div class="rich-text">'
+                f'<h4><i class="fa-solid fa-play"></i> 配套视频教程</h4>'
+                f'{vtags}'
+                f'</div></div></div>'
+            )
+
         # DOCX 内容（多个则合并）
         docx_list = node_docx.get(node_id, [])
         if docx_list:
@@ -107,21 +126,6 @@ with app.app_context():
                 if len(docx_list) > 1:
                     parts.append(f'<h4>第{i+1}部分</h4>')
                 parts.append(html)
-
-        # 视频下载链接
-        video_list = node_videos.get(node_id, [])
-        if video_list:
-            vlinks = ''.join(
-                f'<li><a href="/static/uploads/{v}" class="btn-primary" target="_blank">'
-                f'<i class="fa-solid fa-download"></i> 下载视频：{v}</a></li>'
-                for v in video_list
-            )
-            parts.append(
-                f'<div class="tutorial-rich"><div class="rich-divider"></div>'
-                f'<div class="rich-block"><div class="rich-text">'
-                f'<h4>配套视频教程</h4><ul>{vlinks}</ul>'
-                f'</div></div></div>'
-            )
 
         full_html = '\n'.join(parts)
         if not full_html.strip():
