@@ -106,7 +106,7 @@ def convert_docx(filepath):
             text = p.text.strip()
             if not text:
                 continue
-            style_name = (p.style.name or '').lower()
+            style_name = (p.style.name if p.style and p.style.name else '').lower()
             if 'heading 1' in style_name or '标题 1' in style_name:
                 parts.append(f'<h4>{text}</h4>')
             elif 'heading 2' in style_name or '标题 2' in style_name:
