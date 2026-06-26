@@ -82,23 +82,28 @@ def find_file(size, ext):
 
 
 def convert_docx(filepath):
-    """DOCX → HTML"""
-    with open(filepath, 'rb') as f:
-        result = mammoth.convert_to_html(f)
-    html = result.value.replace('src="images/', 'src="/static/uploads/images/')
-    for m in (result.messages or []):
-        msg = m.message if hasattr(m, 'message') else str(m)
-        if msg:
-            print(f'    [mammoth] {msg}')
-    return html
+    """DOCX → HTML，失败返回空字符串"""
+    try:
+        with open(filepath, 'rb') as f:
+            result = mammoth.convert_to_html(f)
+        html = result.value.replace('src="images/', 'src="/static/uploads/images/')
+        for m in (result.messages or []):
+            msg = m.message if hasattr(m, 'message') else str(m)
+            if msg:
+                print(f'    [mammoth] {msg}')
+        return html
+    except Exception as e:
+        print(f'    [ERROR] mammoth转换失败: {e}')
+        return ''
 
 
 with app.app_context():
     # ── 按 node_id 分组收集内容 ──
-    node_docx = {}    # node_id → [html_content, ...]
-    node_videos = {}  # node_id → [(filename, is_mov), ...]
-    node_pdfs = {}    # node_id → [(filename, title_index), ...]  supplementary PDFs
-    node_titles = {}  # node_id → title
+    node_docx = {}       # node_id → [html_content, ...]
+    node_videos = {}     # node_id → [(filename, is_mov), ...]
+    node_pdfs = {}       # node_id → [filename, ...]  supplementary PDFs
+    node_failed_docx = {} # node_id → [filename, ...] 转换失败的DOCX
+    node_titles = {}
 
     found_docx = 0
     found_videos = 0
@@ -123,6 +128,9 @@ with app.app_context():
             if html.strip():
                 node_docx.setdefault(node_id, []).append(html)
                 found_docx += 1
+            else:
+                node_failed_docx.setdefault(node_id, []).append(basename)
+                print(f'    [FALLBACK] 转换失败，将提供下载链接')
         elif ftype in ('mp4', 'mov'):
             print(f'[{ftype.upper()}]  {node_id} {title} ← {basename}')
             node_videos.setdefault(node_id, []).append((basename, ftype == 'mov'))
@@ -165,6 +173,20 @@ with app.app_context():
                 if len(docx_list) > 1:
                     parts.append(f'<h4>第{i+1}部分</h4>')
                 parts.append(html)
+
+        # 转换失败的 DOCX 提供下载链接
+        failed_list = node_failed_docx.get(node_id, [])
+        if failed_list:
+            f_links = ''.join(
+                f'<li><a href="/static/uploads/{f}" target="_blank" class="text-link">'
+                f'<i class="fa-solid fa-file-word"></i> {f}</a></li>'
+                for f in failed_list
+            )
+            parts.append(
+                f'<div class="rich-divider"></div>'
+                f'<h4><i class="fa-solid fa-download"></i> 辅助文档（下载查看）</h4>'
+                f'<ul>{f_links}</ul>'
+            )
 
         # 补充参考文献（PDF 下载链接）
         pdf_list = node_pdfs.get(node_id, [])
