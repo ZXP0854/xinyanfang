@@ -156,26 +156,23 @@ with app.app_context():
         video_count = len(video_list)
         docx_count = len(docx_list)
 
-        if video_count > 1 and docx_count > 1:
-            # 多视频+多图文：逐一穿插（视频 → 第N部分标题 → DOCX内容）
-            max_n = max(video_count, docx_count)
-            for i in range(max_n):
-                if i < video_count:
-                    v, is_mov = video_list[i]
-                    parts.append(
-                        f'<video controls preload="metadata" '
-                        f'style="width:100%;max-width:100%;border-radius:12px;display:block;margin-bottom:12px;" '
-                        f'poster="/static/uploads/{v.replace(".mp4","").replace(".mov","")}.jpg">'
-                        f'<source src="/static/uploads/{v}" type="video/mp4">'
-                        f'</video>'
-                    )
-                if i < docx_count:
-                    parts.append(f'<h4>第{i+1}部分</h4>')
-                    parts.append(docx_list[i])
-                if i < max_n - 1:
+        if video_count == docx_count and video_count >= 1:
+            # 视频与图文数量相同：逐一穿插（视频 → 第N部分 → DOCX）
+            for i in range(video_count):
+                v, is_mov = video_list[i]
+                parts.append(
+                    f'<video controls preload="metadata" '
+                    f'style="width:100%;max-width:100%;border-radius:12px;display:block;margin-bottom:12px;" '
+                    f'poster="/static/uploads/{v.replace(".mp4","").replace(".mov","")}.jpg">'
+                    f'<source src="/static/uploads/{v}" type="video/mp4">'
+                    f'</video>'
+                )
+                parts.append(f'<h4>第{i+1}部分</h4>')
+                parts.append(docx_list[i])
+                if i < video_count - 1:
                     parts.append('<div class="rich-divider"></div>')
         else:
-            # 单视频或无配对：视频统一放前面
+            # 数量不相等或无双份：视频放前面，然后所有图文
             if video_list:
                 vtags = ''.join(
                     f'<video controls preload="metadata" '
@@ -190,10 +187,11 @@ with app.app_context():
                     f'{vtags}'
                     f'<div class="rich-divider"></div>'
                 )
-            # DOCX 图文内容
             if docx_list:
                 for i, html in enumerate(docx_list):
                     if len(docx_list) > 1:
+                        parts.append(f'<h4>第{i+1}部分</h4>')
+                    parts.append(html)
                         parts.append(f'<h4>第{i+1}部分</h4>')
                     parts.append(html)
 
