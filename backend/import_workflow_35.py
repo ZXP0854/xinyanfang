@@ -149,30 +149,53 @@ with app.app_context():
     for node_id, title in sorted(node_titles.items()):
         parts = []
 
-        # 视频内嵌播放器（标题下方最前面）
+        # ── 视频和图文交织排版 ──
         video_list = node_videos.get(node_id, [])
-        if video_list:
-            vtags = ''.join(
-                f'<video controls preload="metadata" '
-                f'style="width:100%;max-width:100%;border-radius:12px;display:block;margin-bottom:12px;" '
-                f'poster="/static/uploads/{v.replace(".mp4","").replace(".mov","")}.jpg">'
-                f'<source src="/static/uploads/{v}" type="video/mp4">'
-                f'</video>'
-                for v, is_mov in video_list
-            )
-            parts.append(
-                f'<h4><i class="fa-solid fa-play"></i> 配套视频教程</h4>'
-                f'{vtags}'
-                f'<div class="rich-divider"></div>'
-            )
-
-        # DOCX 图文内容
         docx_list = node_docx.get(node_id, [])
-        if docx_list:
-            for i, html in enumerate(docx_list):
-                if len(docx_list) > 1:
+
+        video_count = len(video_list)
+        docx_count = len(docx_list)
+
+        if video_count > 1 and docx_count > 1:
+            # 多视频+多图文：逐一穿插（视频 → 第N部分标题 → DOCX内容）
+            max_n = max(video_count, docx_count)
+            for i in range(max_n):
+                if i < video_count:
+                    v, is_mov = video_list[i]
+                    parts.append(
+                        f'<video controls preload="metadata" '
+                        f'style="width:100%;max-width:100%;border-radius:12px;display:block;margin-bottom:12px;" '
+                        f'poster="/static/uploads/{v.replace(".mp4","").replace(".mov","")}.jpg">'
+                        f'<source src="/static/uploads/{v}" type="video/mp4">'
+                        f'</video>'
+                    )
+                if i < docx_count:
                     parts.append(f'<h4>第{i+1}部分</h4>')
-                parts.append(html)
+                    parts.append(docx_list[i])
+                if i < max_n - 1:
+                    parts.append('<div class="rich-divider"></div>')
+        else:
+            # 单视频或无配对：视频统一放前面
+            if video_list:
+                vtags = ''.join(
+                    f'<video controls preload="metadata" '
+                    f'style="width:100%;max-width:100%;border-radius:12px;display:block;margin-bottom:12px;" '
+                    f'poster="/static/uploads/{v.replace(".mp4","").replace(".mov","")}.jpg">'
+                    f'<source src="/static/uploads/{v}" type="video/mp4">'
+                    f'</video>'
+                    for v, is_mov in video_list
+                )
+                parts.append(
+                    f'<h4><i class="fa-solid fa-play"></i> 配套视频教程</h4>'
+                    f'{vtags}'
+                    f'<div class="rich-divider"></div>'
+                )
+            # DOCX 图文内容
+            if docx_list:
+                for i, html in enumerate(docx_list):
+                    if len(docx_list) > 1:
+                        parts.append(f'<h4>第{i+1}部分</h4>')
+                    parts.append(html)
 
         # 转换失败的 DOCX 提供下载链接
         failed_list = node_failed_docx.get(node_id, [])
