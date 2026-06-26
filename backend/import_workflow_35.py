@@ -82,7 +82,7 @@ def find_file(size, ext):
 
 
 def convert_docx(filepath):
-    """DOCX → HTML，失败返回空字符串"""
+    """DOCX → HTML，mammoth 失败时用 python-docx 提取文本"""
     try:
         with open(filepath, 'rb') as f:
             result = mammoth.convert_to_html(f)
@@ -91,9 +91,48 @@ def convert_docx(filepath):
             msg = m.message if hasattr(m, 'message') else str(m)
             if msg:
                 print(f'    [mammoth] {msg}')
-        return html
+        if html.strip():
+            return html
+        print(f'    [WARN] mammoth返回空内容，尝试python-docx提取')
     except Exception as e:
-        print(f'    [ERROR] mammoth转换失败: {e}')
+        print(f'    [WARN] mammoth失败: {e}，尝试python-docx提取')
+
+    # python-docx 兜底：提取所有段落，保留标题样式
+    try:
+        import docx
+        doc = docx.Document(filepath)
+        parts = []
+        for p in doc.paragraphs:
+            text = p.text.strip()
+            if not text:
+                continue
+            style_name = (p.style.name or '').lower()
+            if 'heading 1' in style_name or '标题 1' in style_name:
+                parts.append(f'<h4>{text}</h4>')
+            elif 'heading 2' in style_name or '标题 2' in style_name:
+                parts.append(f'<p><strong>{text}</strong></p>')
+            elif 'heading' in style_name or '标题' in style_name:
+                parts.append(f'<p><strong>{text}</strong></p>')
+            else:
+                parts.append(f'<p>{text}</p>')
+
+        # 表格提取
+        for table in doc.tables:
+            rows = []
+            for row in table.rows:
+                cells = ''.join(f'<td>{cell.text}</td>' for cell in row.cells)
+                rows.append(f'<tr>{cells}</tr>')
+            parts.append(f'<table>{"".join(rows)}</table>')
+
+        html = '\n'.join(parts)
+        if html.strip():
+            print(f'    [OK] python-docx提取成功 ({len(parts)} 个元素)')
+            return html
+        else:
+            print(f'    [FAIL] python-docx也未提取到内容')
+            return ''
+    except Exception as e2:
+        print(f'    [FAIL] python-docx也失败: {e2}')
         return ''
 
 
