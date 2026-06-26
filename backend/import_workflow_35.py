@@ -192,8 +192,6 @@ with app.app_context():
                     if len(docx_list) > 1:
                         parts.append(f'<h4>第{i+1}部分</h4>')
                     parts.append(html)
-                        parts.append(f'<h4>第{i+1}部分</h4>')
-                    parts.append(html)
 
         # 转换失败的 DOCX 提供下载链接
         failed_list = node_failed_docx.get(node_id, [])
