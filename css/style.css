@@ -856,7 +856,7 @@ body {
 .rich-text ul { margin: 0.4rem 0 0 1.1rem; padding: 0; }
 .rich-text li { font-size: 0.95rem; line-height: 1.7; color: var(--body); margin-bottom: 0.3rem; }
 .rich-text img { max-width: 100% !important; height: auto !important; border-radius: 8px; display: block; }
-.rich-text video { max-width: 100% !important; }
+.rich-text video { max-width: 100% !important; aspect-ratio: 16 / 9; min-height: 240px; background: #000; border-radius: 12px; }
 .rich-text table {
     border-collapse: collapse;
     max-width: 100%;
