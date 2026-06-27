@@ -97,7 +97,7 @@ def convert_file(filepath):
         url = f'/static/uploads/{fname}'
         pdf_block = (
             f'<div class="pdf-viewer">'
-            f'<iframe src="{url}#toolbar=0&navpanes=0" '
+            f'<iframe src="{url}" '
             f'style="width:100%;height:80vh;min-height:500px;border-radius:12px;border:1px solid var(--hairline);" '
             f'frameborder="0" allowfullscreen="true"></iframe>'
             f'</div>'

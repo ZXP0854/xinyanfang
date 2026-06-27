@@ -6,7 +6,7 @@
     <title>心研坊 · 教程详情</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20">
+    <link rel="stylesheet" href="css/style.css?v=21">
 </head>
 <body>
 <div class="top-nav">
@@ -65,7 +65,7 @@
     </div>
 </div>
 
-<script src="js/common.js?v=20"></script>
+<script src="js/common.js?v=21"></script>
 <script>
 (function() {
     var urlParams = new URLSearchParams(window.location.search);
@@ -115,18 +115,7 @@
         }
 
         var html = t.content || '';
-        var isPdf = html.indexOf('PDF') > -1 && html.indexOf('download') > -1;
-
-        if (isPdf) {
-            var m = html.match(/href="([^"]+\.pdf)"/);
-            var url = m ? m[1] : '';
-            var name = url.split('/').pop();
-            html = '<div class="apdf"><div class="apdf-bar">' +
-                '<span><i class="fa-solid fa-file-pdf"></i> ' + name + '</span>' +
-                '<a href="' + url + '" download class="apdf-dl"><i class="fa-solid fa-download"></i> 下载</a>' +
-                '</div><iframe src="' + url + '" class="apdf-iframe"></iframe>' +
-                '<p class="apdf-note">如无法预览，请<a href="' + url + '">点击下载</a>后本地查看。</p></div>';
-        } else {
+        if (false) { /* 旧的下载条已废弃 */
             html = html
                 .replace(/<div class="tutorial-rich">/g, '')
                 .replace(/<div class="rich-divider"><\/div>/g, '')
