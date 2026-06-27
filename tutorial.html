@@ -6,7 +6,7 @@
     <title>心研坊 · 教程详情</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=21">
+    <link rel="stylesheet" href="css/style.css?v=22">
 </head>
 <body>
 <div class="top-nav">
@@ -65,7 +65,7 @@
     </div>
 </div>
 
-<script src="js/common.js?v=21"></script>
+<script src="js/common.js?v=22"></script>
 <script>
 (function() {
     var urlParams = new URLSearchParams(window.location.search);
@@ -115,17 +115,16 @@
         }
 
         var html = t.content || '';
-        if (false) { /* 旧的下载条已废弃 */
-            html = html
-                .replace(/<div class="tutorial-rich">/g, '')
-                .replace(/<div class="rich-divider"><\/div>/g, '')
-                .replace(/<div class="rich-block">/g, '<div class="ablock">')
-                .replace(/<div class="rich-text">/g, '<div class="atext">')
-                .replace(/<\/div>\s*<\/div>\s*$/g, '</div>')
-                .replace(/<h4>/g, '<h3 class="ah3">')
-                .replace(/<\/h4>/g, '</h3>');
-            html = html.replace(/<img([^>]*)>/g, '<div class="aimg"><img$1></div>');
-        }
+        // 非PDF内容 → 转换为文章排版格式
+        html = html
+            .replace(/<div class="tutorial-rich">/g, '')
+            .replace(/<div class="rich-divider"><\/div>/g, '')
+            .replace(/<div class="rich-block">/g, '<div class="ablock">')
+            .replace(/<div class="rich-text">/g, '<div class="atext">')
+            .replace(/<\/div>\s*<\/div>\s*$/g, '</div>')
+            .replace(/<h4>/g, '<h3 class="ah3">')
+            .replace(/<\/h4>/g, '</h3>');
+        html = html.replace(/<img([^>]*)>/g, '<div class="aimg"><img$1></div>');
 
         document.getElementById('article-body').innerHTML = html;
         fixPdfEmbeds();

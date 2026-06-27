@@ -222,6 +222,7 @@ function renderDetail(nodeId) {
 
 // 将旧的 embed PDF 替换为 iframe（更好的跨浏览器兼容）
 function fixPdfEmbeds() {
+    // 把旧 embed PDF 替换为 iframe
     var embeds = document.querySelectorAll('embed[type="application/pdf"]');
     embeds.forEach(function(embed) {
         var src = embed.getAttribute('src');
@@ -238,6 +239,11 @@ function fixPdfEmbeds() {
         wrapper.appendChild(iframe);
         parent.replaceChild(wrapper, embed);
     });
+    // 移除旧数据中的 apdf 下载条和提示
+    var bars = document.querySelectorAll('.apdf-bar, .apdf-note, .apdf-dl');
+    for (var i = 0; i < bars.length; i++) {
+        bars[i].parentNode.removeChild(bars[i]);
+    }
 }
 
 // 图片模态交互：绑定和控制放大/关闭
