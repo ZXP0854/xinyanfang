@@ -96,7 +96,7 @@ def convert_file(filepath):
         fname = os.path.basename(filepath)
         url = f'/static/uploads/{fname}'
         pdf_block = (
-            f'<embed src="{url}" type="application/pdf" '
+            f'<embed src="{url}#toolbar=0&navpanes=0" type="application/pdf" '
             f'style="width:100%;height:80vh;min-height:600px;border-radius:12px;border:1px solid var(--hairline);">'
         )
         return pdf_block, []
