@@ -1038,15 +1038,11 @@ body {
 .rich-text video { max-width: 100% !important; aspect-ratio: 16 / 9; min-height: 240px; background: #000; border-radius: 12px; }
 
 /* PDF 查看器容器 */
-.pdf-viewer { position: relative; margin: 1rem 0; }
-.pdf-viewer iframe { width: 100%; border-radius: 12px; border: 1px solid var(--hairline); background: #f5f5f5; min-height: 600px; }
-.pdf-fallback {
-    text-align: center;
-    font-size: 0.85rem;
-    color: var(--muted);
-    margin-top: 8px;
+.pdf-viewer { position: relative; margin: 1rem 0; width: 100%; }
+.pdf-viewer iframe { width: 100%; height: 80vh; min-height: 500px; border-radius: 12px; border: 1px solid var(--hairline); background: #f5f5f5; }
+@media (max-width: 768px) {
+    .pdf-viewer iframe { height: 60vh; min-height: 360px; }
 }
-.pdf-fallback a { color: var(--primary); text-decoration: underline; }
 .rich-text table {
     border-collapse: collapse;
     max-width: 100%;
@@ -1808,4 +1804,57 @@ footer {
     .article-body { font-size: 1rem; }
     .apdf-iframe { height: 55vh; min-height: 360px; }
     .article-header { margin-bottom: 1.8rem; padding-bottom: 1.4rem; }
+    /* 树状图 + 教程区 → 上下堆叠 */
+    .flow-layout { flex-direction: column; gap: 20px; }
+    .tree-sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 300px;
+        position: static;
+        border-radius: 12px;
+        padding: 16px;
+    }
+    .detail-area { padding: 20px; border-radius: 12px; }
+    .detail-title h3 { font-size: 1.1rem; }
+    /* 顶部导航 */
+    .top-nav { padding: 0 1rem; }
+    .top-nav .logo span { display: none; }
+    .search-container { max-width: 160px; }
+    .search-container input { width: 100px; font-size: 0.8rem; }
+    /* 搜索下拉 */
+    .search-dropdown { width: calc(100vw - 32px); left: 0; transform: none; }
+    /* 卡片网格 */
+    .card-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; padding: 0 1rem 2rem; }
+    .card-grid .card { padding: 1.2rem; }
+    /* 资源索引 */
+    .resource-teaser-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; padding: 0 1rem 2rem; }
+    .resource-modules { grid-template-columns: 1fr; }
+    /* 章节头部 */
+    .section-header { padding: 0 1rem; }
+    .section-title { font-size: 1.3rem; }
+    .section-desc { font-size: 0.85rem; padding: 0 0.5rem; }
+    .page-banner { padding: 2.5rem 1.25rem 2rem; }
+    .page-banner h1 { font-size: 1.5rem; }
+    /* 教程图文 */
+    .rich-gallery { grid-template-columns: 1fr; }
+    .rich-figure img { max-height: 280px; }
+    /* 页脚 */
+    footer { padding: 32px 1rem; }
+    footer .container { flex-direction: column; gap: 0.5rem; text-align: center; }
+}
+
+@media (max-width: 480px) {
+    .card-grid { grid-template-columns: 1fr; }
+    .resource-teaser-grid { grid-template-columns: 1fr; }
+    .search-container { max-width: 130px; }
+    .search-container input { width: 70px; }
+    .hero { padding: 2.5rem 1rem 2rem; }
+    .hero-title { font-size: 1.5rem; }
+    .hero-intro { font-size: 0.85rem; }
+    .tree-sidebar { max-height: 250px; padding: 12px; }
+    .tree-node-level1 { font-size: 13px; padding: 6px 10px; }
+    .tree-node-level2 { font-size: 12px; padding: 5px 10px 5px 20px; }
+    .stage-title { font-size: 16px; }
+    .detail-area { padding: 14px; }
+    .flip-card { height: 150px; }
 }

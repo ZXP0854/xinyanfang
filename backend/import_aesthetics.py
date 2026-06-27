@@ -98,9 +98,8 @@ def convert_file(filepath):
         pdf_block = (
             f'<div class="pdf-viewer">'
             f'<iframe src="{url}#toolbar=0&navpanes=0" '
-            f'style="width:100%;height:80vh;min-height:600px;border-radius:12px;border:1px solid var(--hairline);" '
+            f'style="width:100%;height:80vh;min-height:500px;border-radius:12px;border:1px solid var(--hairline);" '
             f'frameborder="0" allowfullscreen="true"></iframe>'
-            f'<p class="pdf-fallback">如PDF无法加载，<a href="{url}" target="_blank">点击此处打开</a></p>'
             f'</div>'
         )
         return pdf_block, []

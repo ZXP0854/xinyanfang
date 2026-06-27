@@ -227,10 +227,8 @@ function fixPdfEmbeds() {
         var src = embed.getAttribute('src');
         if (!src) return;
         var parent = embed.parentNode;
-        // 创建容器
         var wrapper = document.createElement('div');
         wrapper.className = 'pdf-viewer';
-        // 创建 iframe
         var iframe = document.createElement('iframe');
         iframe.src = src;
         var oldStyle = embed.getAttribute('style') || '';
@@ -238,12 +236,6 @@ function fixPdfEmbeds() {
         iframe.setAttribute('frameborder', '0');
         iframe.setAttribute('allowfullscreen', 'true');
         wrapper.appendChild(iframe);
-        // 添加后备链接
-        var fallback = document.createElement('p');
-        fallback.className = 'pdf-fallback';
-        var cleanSrc = src.replace('#toolbar=0&navpanes=0', '');
-        fallback.innerHTML = '如PDF无法加载，<a href="' + cleanSrc + '" target="_blank">点击此处打开</a>';
-        wrapper.appendChild(fallback);
         parent.replaceChild(wrapper, embed);
     });
 }
