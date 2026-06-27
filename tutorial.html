@@ -6,7 +6,7 @@
     <title>心研坊 · 教程详情</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=18">
+    <link rel="stylesheet" href="css/style.css?v=19">
 </head>
 <body>
 <div class="top-nav">
@@ -65,7 +65,7 @@
     </div>
 </div>
 
-<script src="js/common.js?v=18"></script>
+<script src="js/common.js?v=19"></script>
 <script>
 (function() {
     var urlParams = new URLSearchParams(window.location.search);
@@ -139,6 +139,7 @@
         }
 
         document.getElementById('article-body').innerHTML = html;
+        fixPdfEmbeds();
 
         // 图片点击放大
         [].forEach.call(document.querySelectorAll('.article-body img'), function(img) {

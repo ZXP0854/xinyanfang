@@ -209,13 +209,43 @@ function renderDetail(nodeId) {
                 // 无API内容 → 降级到硬编码
                 detailDiv.innerHTML = getTutorialTemplate(node.id, node.name);
             }
+            fixPdfEmbeds();
             attachImageModalHandlers();
         })
         .catch(function() {
             // 网络错误 → 降级
             detailDiv.innerHTML = getTutorialTemplate(node.id, node.name);
+            fixPdfEmbeds();
             attachImageModalHandlers();
         });
+}
+
+// 将旧的 embed PDF 替换为 iframe（更好的跨浏览器兼容）
+function fixPdfEmbeds() {
+    var embeds = document.querySelectorAll('embed[type="application/pdf"]');
+    embeds.forEach(function(embed) {
+        var src = embed.getAttribute('src');
+        if (!src) return;
+        var parent = embed.parentNode;
+        // 创建容器
+        var wrapper = document.createElement('div');
+        wrapper.className = 'pdf-viewer';
+        // 创建 iframe
+        var iframe = document.createElement('iframe');
+        iframe.src = src;
+        var oldStyle = embed.getAttribute('style') || '';
+        iframe.setAttribute('style', oldStyle + 'border:none;');
+        iframe.setAttribute('frameborder', '0');
+        iframe.setAttribute('allowfullscreen', 'true');
+        wrapper.appendChild(iframe);
+        // 添加后备链接
+        var fallback = document.createElement('p');
+        fallback.className = 'pdf-fallback';
+        var cleanSrc = src.replace('#toolbar=0&navpanes=0', '');
+        fallback.innerHTML = '如PDF无法加载，<a href="' + cleanSrc + '" target="_blank">点击此处打开</a>';
+        wrapper.appendChild(fallback);
+        parent.replaceChild(wrapper, embed);
+    });
 }
 
 // 图片模态交互：绑定和控制放大/关闭
