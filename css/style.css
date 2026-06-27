@@ -1109,7 +1109,7 @@ body {
     position: absolute;
     top: 18px;
     left: calc(100% + var(--login-intro-shift) + 1.75rem);
-    width: clamp(190px, 18vw, 280px);
+    width: clamp(140px, 14vw, 200px);
     aspect-ratio: 1;
     background: url("../logo.jpg") center / contain no-repeat;
     opacity: 0.96;
