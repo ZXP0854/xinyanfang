@@ -95,12 +95,13 @@ def convert_file(filepath):
     elif ext == '.pdf':
         fname = os.path.basename(filepath)
         url = f'/static/uploads/{fname}'
-        download_block = (
-            f'<p>此内容为PDF文档，请下载后查看。</p>'
-            f'<p><a href="{url}" class="btn-primary" target="_blank">'
+        pdf_block = (
+            f'<embed src="{url}" type="application/pdf" '
+            f'style="width:100%;height:80vh;min-height:600px;border-radius:12px;border:1px solid var(--hairline);">'
+            f'<p style="margin-top:0.5rem;"><a href="{url}" class="btn-primary" target="_blank">'
             f'<i class="fa-solid fa-download"></i> 下载PDF文件</a></p>'
         )
-        return download_block, []
+        return pdf_block, []
     return '', ['不支持的文件格式']
 
 
