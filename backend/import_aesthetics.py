@@ -98,8 +98,6 @@ def convert_file(filepath):
         pdf_block = (
             f'<embed src="{url}" type="application/pdf" '
             f'style="width:100%;height:80vh;min-height:600px;border-radius:12px;border:1px solid var(--hairline);">'
-            f'<p style="margin-top:0.5rem;"><a href="{url}" class="btn-primary" target="_blank">'
-            f'<i class="fa-solid fa-download"></i> 下载PDF文件</a></p>'
         )
         return pdf_block, []
     return '', ['不支持的文件格式']
