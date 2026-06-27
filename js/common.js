@@ -220,30 +220,158 @@ function renderDetail(nodeId) {
         });
 }
 
-// 将旧的 embed PDF 替换为 iframe（更好的跨浏览器兼容）
+// ─── PDF.js 动态加载 ───
+var _pdfJsReady = false;
+var _pdfJsLoading = false;
+var _pdfJsQueue = [];
+
+function _loadPdfJs(cb) {
+    if (_pdfJsReady) { cb(); return; }
+    _pdfJsQueue.push(cb);
+    if (_pdfJsLoading) return;
+    _pdfJsLoading = true;
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = function() {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        _pdfJsReady = true;
+        _pdfJsQueue.forEach(function(f) { f(); });
+        _pdfJsQueue = [];
+    };
+    s.onerror = function() {
+        _pdfJsLoading = false;
+        _pdfJsQueue = [];
+    };
+    document.head.appendChild(s);
+}
+
+function _renderPdfJs(viewer, url) {
+    var currentPage = 1;
+    var totalPages = 0;
+    var pdfDoc = null;
+    var canvas = viewer.querySelector('.pdfjs-canvas');
+    var curEl = viewer.querySelector('.pdfjs-current');
+    var totalEl = viewer.querySelector('.pdfjs-total');
+    var prevBtn = viewer.querySelector('.pdfjs-prev');
+    var nextBtn = viewer.querySelector('.pdfjs-next');
+    var loadingEl = viewer.querySelector('.pdfjs-loading');
+    var wrap = viewer.querySelector('.pdfjs-canvas-wrap');
+
+    function renderPage(num) {
+        if (!canvas || !wrap) return;
+        pdfDoc.getPage(num).then(function(page) {
+            var scale = wrap.clientWidth / page.getViewport({scale: 1}).width;
+            scale = Math.min(1.5, scale);
+            var viewport = page.getViewport({scale: scale});
+            var dpr = window.devicePixelRatio || 1;
+            canvas.width = Math.floor(viewport.width * dpr);
+            canvas.height = Math.floor(viewport.height * dpr);
+            canvas.style.width = Math.floor(viewport.width) + 'px';
+            canvas.style.height = Math.floor(viewport.height) + 'px';
+            var ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            page.render({canvasContext: ctx, viewport: viewport});
+            curEl.textContent = num;
+            prevBtn.disabled = num <= 1;
+            nextBtn.disabled = num >= totalPages;
+            loadingEl.style.display = 'none';
+        }).catch(function() {
+            loadingEl.style.display = 'flex';
+            loadingEl.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> 页面渲染失败';
+        });
+    }
+
+    function goPage(delta) {
+        var np = currentPage + delta;
+        if (np < 1 || np > totalPages) return;
+        currentPage = np;
+        renderPage(currentPage);
+    }
+
+    prevBtn.addEventListener('click', function() { goPage(-1); });
+    nextBtn.addEventListener('click', function() { goPage(1); });
+    viewer.setAttribute('tabindex', '0');
+    viewer.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); goPage(-1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); goPage(1); }
+    });
+
+    // 移动端触摸滑动翻页
+    var touchStartX = 0;
+    viewer.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+    }, {passive: true});
+    viewer.addEventListener('touchend', function(e) {
+        var dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) goPage(dx < 0 ? 1 : -1);
+    });
+
+    pdfjsLib.getDocument(url).promise.then(function(pdf) {
+        pdfDoc = pdf;
+        totalPages = pdf.numPages;
+        totalEl.textContent = totalPages;
+        if (totalPages <= 1) {
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            curEl.parentElement.style.display = 'none';
+        }
+        renderPage(1);
+    }).catch(function() {
+        loadingEl.style.display = 'flex';
+        loadingEl.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> PDF 加载失败，请刷新重试';
+    });
+}
+
+// 用 PDF.js 画布渲染替换浏览器原生 PDF 查看器（消除移动端下载按钮）
 function fixPdfEmbeds() {
-    // 把旧 embed PDF 替换为 iframe
+    var pdfItems = [];
+
+    // 旧 embed PDF → 先摘掉 src 阻止浏览器加载原生查看器
     var embeds = document.querySelectorAll('embed[type="application/pdf"]');
     embeds.forEach(function(embed) {
         var src = embed.getAttribute('src');
-        if (!src) return;
-        var parent = embed.parentNode;
-        var wrapper = document.createElement('div');
-        wrapper.className = 'pdf-viewer';
-        var iframe = document.createElement('iframe');
-        iframe.src = src;
-        var oldStyle = embed.getAttribute('style') || '';
-        iframe.setAttribute('style', oldStyle + 'border:none;');
-        iframe.setAttribute('frameborder', '0');
-        iframe.setAttribute('allowfullscreen', 'true');
-        wrapper.appendChild(iframe);
-        parent.replaceChild(wrapper, embed);
+        if (src) {
+            pdfItems.push({el: embed, url: src});
+            embed.removeAttribute('src');
+        }
     });
-    // 移除旧数据中的 apdf 下载条和提示
+
+    // iframe PDF（在 .pdf-viewer 容器中）
+    var pdfFrames = document.querySelectorAll('.pdf-viewer iframe[src]');
+    pdfFrames.forEach(function(iframe) {
+        var src = iframe.getAttribute('src');
+        if (src && /\.pdf(\?|$)/i.test(src)) {
+            pdfItems.push({el: iframe.parentNode, url: src});
+            iframe.removeAttribute('src');
+        }
+    });
+
+    // 清理旧数据中的下载条 / 提示
     var bars = document.querySelectorAll('.apdf-bar, .apdf-note, .apdf-dl');
     for (var i = 0; i < bars.length; i++) {
         bars[i].parentNode.removeChild(bars[i]);
     }
+
+    if (pdfItems.length === 0) return;
+
+    _loadPdfJs(function() {
+        pdfItems.forEach(function(item) {
+            var viewer = document.createElement('div');
+            viewer.className = 'pdfjs-viewer';
+            viewer.innerHTML =
+                '<div class="pdfjs-toolbar">' +
+                    '<button class="pdfjs-btn pdfjs-prev" title="上一页"><i class="fa-solid fa-chevron-left"></i></button>' +
+                    '<span class="pdfjs-info"><span class="pdfjs-current">-</span> / <span class="pdfjs-total">-</span></span>' +
+                    '<button class="pdfjs-btn pdfjs-next" title="下一页"><i class="fa-solid fa-chevron-right"></i></button>' +
+                '</div>' +
+                '<div class="pdfjs-canvas-wrap"><canvas class="pdfjs-canvas"></canvas></div>' +
+                '<div class="pdfjs-loading" style="display:flex;"><i class="fa-solid fa-spinner fa-pulse"></i> 加载中……</div>';
+            if (item.el && item.el.parentNode) {
+                item.el.parentNode.replaceChild(viewer, item.el);
+            }
+            _renderPdfJs(viewer, item.url);
+        });
+    });
 }
 
 // 图片模态交互：绑定和控制放大/关闭
