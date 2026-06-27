@@ -117,44 +117,46 @@ function getTutorialTemplate(nodeId, nodeName) {
     return `
         <div class="detail-title"><h3 class="serif serif-xs">${nodeId} ${nodeName}</h3></div>
         <div>
-            <p style="margin-bottom: 20px;">【教程说明】此处将提供关于“${nodeName}”的详细方法介绍、操作步骤与心理学研究示例。</p>
+            <p style="margin-bottom: 20px;">【教程说明】此处将提供关于"${nodeName}"的详细方法介绍、操作步骤与心理学研究示例。</p>
             ${getRichContent(nodeId, nodeName)}
         </div>
     `;
 }
 
-// 针对特定节点的图文并茂排版（放在“教程说明”文字下面）
+// 针对特定节点的图文并茂排版（放在"教程说明"文字下面）
+// 教程元数据（供搜索和教程渲染共用）
+const tutorialMeta = {
+    '1-1': { title: '文献全局图谱生成', desc: '文献堆积却理不清脉络关联，用Connected Papers一键生成核心文献关联图谱，配合Zotero高效管理，快速构建领域知识框架，看清研究版图。' },
+    '1-2': { title: '研究前沿选题与评估', desc: '研究初期方向模糊、前沿信息分散难抓，用ChatGPT5快速梳理近五年心理学研究前沿动态并辅助生成选题，从创新性和可行性多维度评估，帮你精准锁定有价值的研究方向。' },
+    '2-1': { title: '研究变量关系梳理', desc: '心理学变量关系复杂抽象、难以形成清晰框架，结合AMOS与Deepseek绘制关系图并自动评估模型合理性，把模糊假设变成直观的研究蓝图。' },
+    '2-2-1': { title: '实验设计方法', desc: '心理学实验设计方法众多却选不准，系统对比6-8种经典设计并附核心期刊文献案例，再用ChatGPT根据你的选题智能推荐最优方案，设计决策有据可依。' },
+    '2-2-2': { title: '模型分析方法', desc: '心理学研究模型分析方法眼花缭乱、适用场景不清，梳理前沿模型的特点与场景，借助ChatGPT/Gemini匹配研究特征，找到最合适的分析路径，不再无从下手。' },
+    '3-1-1': { title: 'Elicit辅助取样方法文献检索', desc: '取样方法选择缺乏文献支撑，用Elicit快速定位各方法的心理学研究权威文献，系统对比特点与适用场景，让取样决策有理有据。' },
+    '3-1-2': { title: 'Gemini+SPSS样本代表性评估与偏差识别', desc: '样本代表性不足却难以量化评估，借助Gemini辅助SPSS完成卡方拟合优度检验，自动识别数据偏差，确保样本质量经得起学术推敲。' },
+    '3-2': { title: 'G*Power与R语言样本量ChatGPT规划全攻略', desc: '心理学实验样本量算不准、纵向流失没预案，用G*power完成功效分析与流失补偿，再用ChatGPT生成R代码，让样本规划科学高效。' },
+    '3-3': { title: 'Gemini/ChatGPT起草知情同意书与Qualtrics伦理设置', desc: '心理学研究伦理审查流程繁琐易遗漏，用Gemini/ChatGPT起草标准知情同意书，配合Qualtrics实现匿名化与合规跳转，全程守护研究伦理底线。' },
+    '4-1': { title: '常用心理学量表库汇总与使用教程', desc: '测量工具分散难找、筛选耗时，汇总全网心理学量表库资源，手把手教你快速检索与筛选，精准匹配研究需求的量表。' },
+    '4-2-1': { title: 'EpiData与见数平台问卷收集全流程', desc: '问卷发放回收效率低、管理混乱，从纸质问卷排版到EpiData录入，再到见数平台线上编制发布，覆盖心理学问卷数据收集的全流程。' },
+    '4-2-2': { title: 'ChatGPT辅助PsychoPy编程与在线化部署', desc: '心理学行为实验编程门槛高、搭建周期长，借助ChatGPT编写PsychoPy代码并生成实验材料，通过见数平台实现线上部署，让实验搭建不再困难。' },
+    '4-2-3': { title: 'CEST/Gorilla/Pavlovia实验平台教程', desc: '在线心理学实验平台众多却无从选择，对比CEST、Gorilla和Pavlovia三大平台，从搭建到运行全流程演示，找到最适合你的方案。' },
+    '4-3': { title: '数据清洗与描述性统计', desc: '原始数据脏乱、清洗步骤繁琐，用SPSS完成缺失值处理、插补与描述统计，再借助Dingo智能清洗，为后续分析准备好干净数据。' },
+    '4-4-1': { title: 'ChatSPSS与AI对话实现信效度检验', desc: '信效度检验步骤繁琐、软件操作复杂，用ChatSPSS和AI对话式完成信效度分析，自动生成检验报告，让测量质量评估轻松搞定。' },
+    '4-4-2': { title: 'ChatGPT/Gemini辅助共同方法偏差识别与处理', desc: '共同方法偏差隐蔽难察觉，用ChatGPT/Gemini辅助识别数据中的系统性偏差，以共同方法偏差为例给出处理方案，提升研究严谨性。' },
+    '4-5-1': { title: '基础统计分析方法——中介分析', desc: '中介分析批量处理耗时费力，借助ChatGPT/Gemini实现批量中介分析，从模型设定到结果输出一气呵成，大幅提升心理学研究统计分析效率。' },
+    '4-5-2': { title: '高级统计分析方法——Mplus模型和R语言', desc: '高级统计方法上手难、软件总报错，用ChatGPT辅助Mplus模型选择与结果解读，配合Cursor生成R代码分析多层线性模型，攻克心理学研究中的高阶统计分析。' },
+    '5-1-1': { title: '多种AI工具一键绘制研究结果图表', desc: '图表制作反复调整，绘制费时且不够专业，用Gemini、Cursor或Claude等AI工具自动生成结果图表，精准表达心理学研究中的变量关系与实验逻辑，让结果可视化变得直观清晰。' },
+    '5-1-2': { title: 'Gemini辅助图表生成与数据解读', desc: '数据解读缺乏思路、表述不规范，用Gemini生成图表并自动撰写符合心理学学术规范的数据解读，从数字到文字无缝衔接，让结果陈述更加规范有力。' },
+    '5-2': { title: 'ChatGPT定制目标期刊写作模板', desc: '写作模板千篇一律、期刊风格难把握，用ChatGPT检索目标心理学期刊文献并生成个性化写作模板，匹配期刊特色，让研究报告撰写更有针对性。' },
+    '5-3': { title: 'Gemini一键修订论文格式规范', desc: '论文格式反复修改、细节易遗漏，用Gemini一键识别并修正格式问题，从引用规范到排版细节全面把关，让论文格式符合心理学论文发表要求。' }
+};
+
 function getRichContent(nodeId, nodeName) {
-    const tutorials = {
-        '1-1': { title: '文献全局图谱生成', desc: '文献堆积却理不清脉络关联，用Connected Papers一键生成核心文献关联图谱，配合Zotero高效管理，快速构建领域知识框架，看清研究版图。' },
-        '1-2': { title: '研究前沿选题与评估', desc: '研究初期方向模糊、前沿信息分散难抓，用ChatGPT5快速梳理近五年心理学研究前沿动态并辅助生成选题，从创新性和可行性多维度评估，帮你精准锁定有价值的研究方向。' },
-        '2-1': { title: '研究变量关系梳理', desc: '心理学变量关系复杂抽象、难以形成清晰框架，结合AMOS与Deepseek绘制关系图并自动评估模型合理性，把模糊假设变成直观的研究蓝图。' },
-        '2-2-1': { title: '实验设计方法', desc: '心理学实验设计方法众多却选不准，系统对比6-8种经典设计并附核心期刊文献案例，再用ChatGPT根据你的选题智能推荐最优方案，设计决策有据可依。' },
-        '2-2-2': { title: '模型分析方法', desc: '心理学研究模型分析方法眼花缭乱、适用场景不清，梳理前沿模型的特点与场景，借助ChatGPT/Gemini匹配研究特征，找到最合适的分析路径，不再无从下手。' },
-        '3-1-1': { title: 'Elicit辅助取样方法文献检索', desc: '取样方法选择缺乏文献支撑，用Elicit快速定位各方法的心理学研究权威文献，系统对比特点与适用场景，让取样决策有理有据。' },
-        '3-1-2': { title: 'Gemini+SPSS样本代表性评估与偏差识别', desc: '样本代表性不足却难以量化评估，借助Gemini辅助SPSS完成卡方拟合优度检验，自动识别数据偏差，确保样本质量经得起学术推敲。' },
-        '3-2': { title: 'G*Power与R语言样本量ChatGPT规划全攻略', desc: '心理学实验样本量算不准、纵向流失没预案，用G*power完成功效分析与流失补偿，再用ChatGPT生成R代码，让样本规划科学高效。' },
-        '3-3': { title: 'Gemini/ChatGPT起草知情同意书与Qualtrics伦理设置', desc: '心理学研究伦理审查流程繁琐易遗漏，用Gemini/ChatGPT起草标准知情同意书，配合Qualtrics实现匿名化与合规跳转，全程守护研究伦理底线。' },
-        '4-1': { title: '常用心理学量表库汇总与使用教程', desc: '测量工具分散难找、筛选耗时，汇总全网心理学量表库资源，手把手教你快速检索与筛选，精准匹配研究需求的量表。' },
-        '4-2-1': { title: 'EpiData与见数平台问卷收集全流程', desc: '问卷发放回收效率低、管理混乱，从纸质问卷排版到EpiData录入，再到见数平台线上编制发布，覆盖心理学问卷数据收集的全流程。' },
-        '4-2-2': { title: 'ChatGPT辅助PsychoPy编程与在线化部署', desc: '心理学行为实验编程门槛高、搭建周期长，借助ChatGPT编写PsychoPy代码并生成实验材料，通过见数平台实现线上部署，让实验搭建不再困难。' },
-        '4-2-3': { title: 'CEST/Gorilla/Pavlovia实验平台教程', desc: '在线心理学实验平台众多却无从选择，对比CEST、Gorilla和Pavlovia三大平台，从搭建到运行全流程演示，找到最适合你的方案。' },
-        '4-3': { title: '数据清洗与描述性统计', desc: '原始数据脏乱、清洗步骤繁琐，用SPSS完成缺失值处理、插补与描述统计，再借助Dingo智能清洗，为后续分析准备好干净数据。' },
-        '4-4-1': { title: 'ChatSPSS与AI对话实现信效度检验', desc: '信效度检验步骤繁琐、软件操作复杂，用ChatSPSS和AI对话式完成信效度分析，自动生成检验报告，让测量质量评估轻松搞定。' },
-        '4-4-2': { title: 'ChatGPT/Gemini辅助共同方法偏差识别与处理', desc: '共同方法偏差隐蔽难察觉，用ChatGPT/Gemini辅助识别数据中的系统性偏差，以共同方法偏差为例给出处理方案，提升研究严谨性。' },
-        '4-5-1': { title: '基础统计分析方法——中介分析', desc: '中介分析批量处理耗时费力，借助ChatGPT/Gemini实现批量中介分析，从模型设定到结果输出一气呵成，大幅提升心理学研究统计分析效率。' },
-        '4-5-2': { title: '高级统计分析方法——Mplus模型和R语言', desc: '高级统计方法上手难、软件总报错，用ChatGPT辅助Mplus模型选择与结果解读，配合Cursor生成R代码分析多层线性模型，攻克心理学研究中的高阶统计分析。' },
-        '5-1-1': { title: '多种AI工具一键绘制研究结果图表', desc: '图表制作反复调整，绘制费时且不够专业，用Gemini、Cursor或Claude等AI工具自动生成结果图表，精准表达心理学研究中的变量关系与实验逻辑，让结果可视化变得直观清晰。' },
-        '5-1-2': { title: 'Gemini辅助图表生成与数据解读', desc: '数据解读缺乏思路、表述不规范，用Gemini生成图表并自动撰写符合心理学学术规范的数据解读，从数字到文字无缝衔接，让结果陈述更加规范有力。' },
-        '5-2': { title: 'ChatGPT定制目标期刊写作模板', desc: '写作模板千篇一律、期刊风格难把握，用ChatGPT检索目标心理学期刊文献并生成个性化写作模板，匹配期刊特色，让研究报告撰写更有针对性。' },
-        '5-3': { title: 'Gemini一键修订论文格式规范', desc: '论文格式反复修改、细节易遗漏，用Gemini一键识别并修正格式问题，从引用规范到排版细节全面把关，让论文格式符合心理学论文发表要求。' }
-    };
-    const t = tutorials[nodeId];
+    const t = tutorialMeta[nodeId];
     if (!t) return '';
-    return `<div class=”tutorial-rich”>
-        <div class=”rich-divider”></div>
-        <div class=”rich-block”>
-            <div class=”rich-text”>
+    return `<div class="tutorial-rich">
+        <div class="rich-divider"></div>
+        <div class="rich-block">
+            <div class="rich-text">
                 <h4>${t.title}</h4>
                 <p>${t.desc}</p>
             </div>
@@ -698,11 +700,192 @@ function closeNav() {
 function openTutorial(topicName) {
     window.location.href = 'tutorial.html?title=' + encodeURIComponent(topicName);
 }
-function handleSearch() {
-    const keyword = document.getElementById('searchInput').value.trim();
-    if (keyword) alert(`搜索功能开发中… 您搜索了：“${keyword}”`);
-    else alert('请输入关键词');
+// ─── 搜索功能 ───
+var cachedCards = [];
+var cachedResources = {};
+
+function buildSearchIndex() {
+    var items = [];
+    // 1. 科研流程教程
+    treeData.forEach(function(node) {
+        var meta = tutorialMeta[node.id];
+        items.push({
+            type: 'workflow',
+            id: node.id,
+            title: meta ? meta.title : node.name,
+            desc: meta ? meta.desc : '',
+            stage: node.stage
+        });
+    });
+    // 2. 审美卡片
+    cachedCards.forEach(function(card) {
+        items.push({
+            type: 'card',
+            title: card.title || '',
+            desc: card.description || '',
+            tag: card.tag || card.category || '',
+            category: card.category || '',
+            tutorialTitle: card.tutorial_title || '',
+            icon: card.icon || 'fa-solid fa-file'
+        });
+    });
+    // 3. 科研资源
+    for (var module in cachedResources) {
+        if (cachedResources.hasOwnProperty(module)) {
+            cachedResources[module].forEach(function(item) {
+                items.push({
+                    type: 'resource',
+                    title: item.name || '',
+                    desc: item.description || '',
+                    module: module,
+                    url: item.link_value || '#'
+                });
+            });
+        }
+    }
+    return items;
 }
+
+function matchScore(item, keyword) {
+    var lowerKeyword = keyword.toLowerCase();
+    var score = 0;
+    var title = (item.title || '').toLowerCase();
+    var desc = (item.desc || '').toLowerCase();
+    var tag = (item.tag || '').toLowerCase();
+    var module = (item.module || '').toLowerCase();
+    if (title === lowerKeyword) score += 100;
+    else if (title.indexOf(lowerKeyword) === 0) score += 70;
+    else if (title.indexOf(lowerKeyword) !== -1) score += 50;
+    if (desc.indexOf(lowerKeyword) !== -1) score += 20;
+    if (tag.indexOf(lowerKeyword) !== -1) score += 15;
+    if (module.indexOf(lowerKeyword) !== -1) score += 10;
+    if (item.type === 'workflow') score += 5;
+    return score;
+}
+
+function performSearch() {
+    var keyword = document.getElementById('searchInput').value.trim();
+    var dropdown = document.getElementById('searchDropdown');
+    if (!dropdown) {
+        // 创建下拉容器
+        dropdown = document.createElement('div');
+        dropdown.id = 'searchDropdown';
+        dropdown.className = 'search-dropdown';
+        var searchContainer = document.querySelector('.search-container');
+        if (searchContainer) searchContainer.appendChild(dropdown);
+    }
+
+    if (!keyword) {
+        dropdown.classList.remove('visible');
+        return;
+    }
+
+    var items = buildSearchIndex();
+    var results = [];
+    items.forEach(function(item) {
+        var score = matchScore(item, keyword);
+        if (score > 0) {
+            item._score = score;
+            results.push(item);
+        }
+    });
+    results.sort(function(a, b) { return b._score - a._score; });
+    results = results.slice(0, 12);
+
+    if (results.length === 0) {
+        dropdown.innerHTML = '<div class="search-empty">未找到相关结果，请尝试其他关键词</div>';
+    } else {
+        var groups = { workflow: [], card: [], resource: [] };
+        results.forEach(function(r) { groups[r.type].push(r); });
+        var groupLabels = { workflow: '科研流程教程', card: '科研审美', resource: '科研资源' };
+        var html = '';
+        for (var type in groups) {
+            if (groups[type].length === 0) continue;
+            html += '<div class="search-dropdown-group">' + groupLabels[type] + '</div>';
+            groups[type].forEach(function(r) {
+                var icon, tagHtml = '';
+                if (r.type === 'workflow') {
+                    icon = 'fa-solid fa-diagram-project';
+                    tagHtml = '<span class="sr-tag">第' + r.stage + '阶段</span>';
+                } else if (r.type === 'card') {
+                    icon = r.icon;
+                    tagHtml = r.tag ? '<span class="sr-tag">' + r.tag + '</span>' : '';
+                } else {
+                    icon = 'fa-solid fa-link';
+                    tagHtml = r.module ? '<span class="sr-tag">' + r.module + '</span>' : '';
+                }
+                var clickHandler;
+                var esc = function(s) { return s.replace(/'/g, "\\'"); };
+                if (r.type === 'workflow') {
+                    clickHandler = "onclick=\"window.location.href='workflow.html?node=" + encodeURIComponent(r.id) + "'\"";
+                } else if (r.type === 'card') {
+                    if (r.tutorialTitle) {
+                        clickHandler = "onclick=\"openTutorial('" + esc(r.tutorialTitle) + "')\"";
+                    } else {
+                        clickHandler = "onclick=\"window.location.href='aesthetics.html'\"";
+                    }
+                } else {
+                    if (r.url && r.url !== '#') {
+                        clickHandler = "onclick=\"var m=document.getElementById('resource-modal');if(m){showResourceModal('" + esc(r.title) + "','" + esc(r.desc || '暂无简介') + "','" + esc(r.url) + "')}else{window.open('" + esc(r.url) + "','_blank')}\"";
+                    } else {
+                        clickHandler = "onclick=\"window.location.href='resources.html'\"";
+                    }
+                }
+                html += '<div class="search-result-item" ' + clickHandler + '>' +
+                    '<div class="sr-icon"><i class="' + icon + '"></i></div>' +
+                    '<div class="sr-body">' +
+                        '<div class="sr-title">' + highlightMatch(r.title, keyword) + '</div>' +
+                        '<div class="sr-desc">' + (r.desc || '') + '</div>' +
+                    '</div>' + tagHtml +
+                '</div>';
+            });
+        }
+        dropdown.innerHTML = html;
+    }
+    dropdown.classList.add('visible');
+}
+
+function highlightMatch(text, keyword) {
+    if (!text || !keyword) return text || '';
+    var escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var parts = text.split(new RegExp('(' + escaped + ')', 'gi'));
+    return parts.map(function(p) {
+        return p.toLowerCase() === keyword.toLowerCase() ? '<mark>' + p + '</mark>' : p;
+    }).join('');
+}
+
+function closeSearchResults() {
+    var dropdown = document.getElementById('searchDropdown');
+    if (dropdown) dropdown.classList.remove('visible');
+}
+
+function handleSearch() {
+    performSearch();
+}
+
+// 输入事件监听
+(function initSearchListeners() {
+    var searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { closeSearchResults(); searchInput.blur(); }
+    });
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchInput._debounce);
+        searchInput._debounce = setTimeout(performSearch, 250);
+    });
+    searchInput.addEventListener('focus', function() {
+        if (searchInput.value.trim()) performSearch();
+    });
+    // 点击页面其他地方关闭
+    document.addEventListener('click', function(e) {
+        var dropdown = document.getElementById('searchDropdown');
+        var container = document.querySelector('.search-container');
+        if (dropdown && container && !container.contains(e.target) && !dropdown.contains(e.target)) {
+            closeSearchResults();
+        }
+    });
+})();
 
 // ---------- 滚动堆叠卡片（ScrollStack 的原生 JS 实现，使用窗口滚动） ----------
 function initScrollStack() {
@@ -899,6 +1082,7 @@ function loadResources() {
     fetch('/api/resources')
         .then(res => res.json())
         .then(data => {
+            if (data.modules) cachedResources = data.modules;
             if (!data.modules || !Object.keys(data.modules).length) {
                 modules.innerHTML = '';
                 return;
@@ -955,6 +1139,7 @@ function loadAestheticCards() {
     fetch('/api/cards')
         .then(res => res.json())
         .then(data => {
+            cachedCards = data.cards || [];
             if (!data.cards || !data.cards.length) {
                 masonry.innerHTML = '';
                 return;
