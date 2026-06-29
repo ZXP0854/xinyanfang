@@ -171,3 +171,16 @@ class AuditLog(db.Model):
     detail = db.Column(db.Text, default='')                   # JSON 格式的操作详情
     ip_address = db.Column(db.String(45), default='')
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+
+class SiteStat(db.Model):
+    """网站统计数据：访问人数、教程观看量、提示词复制量、资源点击量"""
+    __tablename__ = 'site_stats'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    event_type = db.Column(db.String(30), nullable=False, index=True)
+    # event_type: 'page_view' | 'tutorial_view' | 'prompt_copy' | 'resource_click'
+    event_key = db.Column(db.String(300), default='')
+    ip_address = db.Column(db.String(45), default='')
+    user_agent = db.Column(db.String(500), default='')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)

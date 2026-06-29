@@ -22,6 +22,32 @@
     </div>
 </div>
 
+<div class="card" style="margin-bottom:24px;">
+    <h3 style="margin-bottom:16px;">网站访问统计</h3>
+    <div class="stats">
+        <div class="stat-card">
+            <div class="num">{{ stat_counts.total_visitors }}</div>
+            <div class="label">独立访客 (IP)</div>
+        </div>
+        <div class="stat-card">
+            <div class="num">{{ stat_counts.page_view }}</div>
+            <div class="label">页面浏览量</div>
+        </div>
+        <div class="stat-card">
+            <div class="num">{{ stat_counts.tutorial_view }}</div>
+            <div class="label">教程观看量</div>
+        </div>
+        <div class="stat-card">
+            <div class="num">{{ stat_counts.prompt_copy }}</div>
+            <div class="label">提示词复制量</div>
+        </div>
+        <div class="stat-card">
+            <div class="num">{{ stat_counts.resource_click }}</div>
+            <div class="label">资源点击量</div>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <h3 style="margin-bottom:16px;">快速操作</h3>
     <div style="display:flex;gap:12px;flex-wrap:wrap;">

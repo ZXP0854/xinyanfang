@@ -67,7 +67,7 @@ def rate_limit(max_requests: int = 60, window_seconds: int = 60):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            key = f'rl:{request.remote_addr}:{request.path}'
+            key = f'rl:{get_client_ip()}:{request.path}'
             now = time.time()
             cutoff = now - window_seconds
 
@@ -101,6 +101,17 @@ def add_security_headers(response):
 # ─── IP 白名单检查 ───────────────────────────────────────────
 
 _TRUSTED_IPS = {'127.0.0.1', '::1'}
+
+
+def get_client_ip() -> str:
+    """获取真实客户端 IP（支持 Nginx 反向代理）"""
+    x_forwarded = request.headers.get('X-Forwarded-For', '')
+    if x_forwarded:
+        return x_forwarded.split(',')[0].strip()
+    x_real = request.headers.get('X-Real-IP', '')
+    if x_real:
+        return x_real.strip()
+    return request.remote_addr or ''
 
 
 def is_trusted_ip() -> bool:

@@ -6,7 +6,7 @@
 import os
 from datetime import datetime
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, current_app
-from models import db, Tutorial, Resource, Card, Upload, AuditLog
+from models import db, Tutorial, Resource, Card, Upload, AuditLog, SiteStat
 from auth import admin_required, _log_audit
 from utils import save_upload, delete_upload_file, allowed_file, convert_docx_with_images
 from middleware import sanitize_input, sanitize_html, validate_required
@@ -55,6 +55,8 @@ def admin_logout():
 @admin_required
 def dashboard():
     """管理后台首页/仪表盘"""
+    from sqlalchemy import func
+
     counts = {
         'tutorials': Tutorial.query.count(),
         'published_tutorials': Tutorial.query.filter_by(is_published=True).count(),
@@ -62,13 +64,23 @@ def dashboard():
         'cards': Card.query.count(),
         'uploads': Upload.query.count(),
     }
+
+    # 网站统计概览
+    stat_counts = {}
+    for event_type in ('page_view', 'tutorial_view', 'prompt_copy', 'resource_click'):
+        stat_counts[event_type] = SiteStat.query.filter_by(event_type=event_type).count()
+    stat_counts['total_visitors'] = (
+        db.session.query(func.count(func.distinct(SiteStat.ip_address)))
+        .scalar()
+    ) or 0
+
     recent_logs = (
         AuditLog.query
         .order_by(AuditLog.created_at.desc())
         .limit(20)
         .all()
     )
-    return render_template('admin/dashboard.html', counts=counts, logs=recent_logs)
+    return render_template('admin/dashboard.html', counts=counts, stat_counts=stat_counts, logs=recent_logs)
 
 
 @admin_bp.route('/admin/tutorials')
@@ -463,3 +475,58 @@ def api_convert_docx():
         'warnings': conversion.get('warnings', []),
         'upload': upload.to_dict(),
     }), 201
+
+
+# ═══════════════════════════════════════════════════════════════
+# 网站统计 API（管理后台）
+# ═══════════════════════════════════════════════════════════════
+
+@admin_bp.route('/api/admin/stats', methods=['GET'])
+@admin_required
+def api_stats():
+    """获取网站统计数据"""
+    from sqlalchemy import func
+    from datetime import date, timedelta
+
+    today = date.today()
+    days = request.args.get('days', 30, type=int)
+    days = min(days, 365)
+    since = today - timedelta(days=days)
+
+    stats = {}
+    for event_type in ('page_view', 'tutorial_view', 'prompt_copy', 'resource_click'):
+        total = SiteStat.query.filter(
+            SiteStat.event_type == event_type,
+            SiteStat.created_at >= since,
+        ).count()
+        unique_ips = (
+            db.session.query(func.count(func.distinct(SiteStat.ip_address)))
+            .filter(
+                SiteStat.event_type == event_type,
+                SiteStat.created_at >= since,
+            )
+            .scalar()
+        ) or 0
+        stats[event_type] = {'total': total, 'unique_ips': unique_ips}
+
+    # 教程观看排行（top 20）
+    top_tutorials = (
+        db.session.query(SiteStat.event_key, func.count(SiteStat.id).label('cnt'))
+        .filter(SiteStat.event_type == 'tutorial_view', SiteStat.created_at >= since)
+        .group_by(SiteStat.event_key)
+        .order_by(func.count(SiteStat.id).desc())
+        .limit(20)
+        .all()
+    )
+    stats['top_tutorials'] = [{'key': k, 'count': c} for k, c in top_tutorials if k]
+
+    # 总体独立访客
+    total_visitors = (
+        db.session.query(func.count(func.distinct(SiteStat.ip_address)))
+        .filter(SiteStat.created_at >= since)
+        .scalar()
+    ) or 0
+    stats['total_visitors'] = total_visitors
+    stats['period_days'] = days
+
+    return jsonify({'stats': stats}), 200

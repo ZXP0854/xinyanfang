@@ -4,8 +4,8 @@
 """
 
 from flask import Blueprint, request, jsonify
-from models import db, Tutorial, Resource, Card
-from middleware import rate_limit
+from models import db, Tutorial, Resource, Card, SiteStat
+from middleware import rate_limit, get_client_ip
 
 api_bp = Blueprint('api', __name__)
 
@@ -113,3 +113,36 @@ def get_cards():
         'cards': [c.to_dict() for c in cards],
         'total': len(cards),
     }), 200
+
+
+# ═══════════════════════════════════════════════════════════════
+# 网站统计 API
+# ═══════════════════════════════════════════════════════════════
+
+@api_bp.route('/api/stats/track', methods=['POST'])
+@rate_limit(max_requests=60, window_seconds=60)
+def track_event():
+    """记录网站统计事件
+    请求体: {"event_type": "page_view|tutorial_view|prompt_copy|resource_click",
+              "event_key": "标识（页面路径/教程ID/资源名称等）"}"""
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': '请提供 JSON 数据'}), 400
+
+    event_type = (data.get('event_type') or '').strip()
+    if event_type not in ('page_view', 'tutorial_view', 'prompt_copy', 'resource_click'):
+        return jsonify({'error': '无效的事件类型'}), 400
+
+    event_key = (data.get('event_key') or '')[:300]
+    ip = get_client_ip()
+    ua = (request.headers.get('User-Agent', '') or '')[:500]
+
+    stat = SiteStat(
+        event_type=event_type,
+        event_key=event_key,
+        ip_address=ip,
+        user_agent=ua,
+    )
+    db.session.add(stat)
+    db.session.commit()
+    return jsonify({'ok': True}), 201

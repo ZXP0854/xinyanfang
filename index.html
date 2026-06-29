@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>心研坊 · 登录</title>
+    <title>心研坊</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=23">
+    <link rel="stylesheet" href="css/style.css?v=29">
 </head>
 <body>
 <div id="login-page">
     <div class="login-card">
         <h1 class="serif serif-lg blur-text" style="margin-bottom: 16px;">心研坊</h1>
-        <p class="blur-text" style="font-size: 18px; color: var(--body); margin-bottom: 32px;">心理学研究方法 · 全流程辅助平台</p>
-        <p class="blur-text" style="margin-bottom: 0;">从选题到报告，每一步都有清晰指引。</p>
-        <p class="blur-text" style="margin-bottom: 40px;">面向应用心理学本硕同学，让科研更从容。</p>
+        <p class="login-tagline blur-text" style="color: var(--body); margin-bottom: 32px;">让每个心理学科研新手，都能用 AI 走出第一步</p>
+        <p class="login-subtitle blur-text" style="margin-bottom: 0;">面向心理学科研新手的 AI 科研导航站。</p>
+        <div class="login-feature-block">
+            <p class="login-feature-line blur-text">选题、设计、取样、分析、写作，</p>
+            <p class="login-feature-line blur-text">每一步给你教程、提示词、工具和示例。</p>
+        </div>
         <div class="flip-row" aria-label="平台模块">
             <div class="flip-card" tabindex="0">
                 <div class="flip-card-inner">
@@ -69,34 +72,34 @@
                     <p>科研教程内容全部由北京林业大学心理学系2024级本科生基于真实操作经历录制与撰写，走在同一条路上的人懂你的真实痛点，帮你有效解决。</p>
                 </div>
                 <div class="scroll-stack-card">
-                    <h2>专为心理学场景深度定制</h2>
-                    <p>不是泛泛的“科研入门教程”，每一个环节都落在心理学的真实情境里，量表、实验、统计……你遇到的问题，这里有对得上的答案。</p>
+                    <h2>内容来源</h2>
+                    <p>本站教程由北京林业大学心理学系2024级本科生基于真实科研操作经验录制、撰写，素材涵盖心理学研究方法各核心环节。科研审美提升板块资源由于晓副教授课题组系统整理与提供。</p>
                 </div>
                 <div class="scroll-stack-card">
-                    <h2>手把手拆解AI辅助科研</h2>
-                    <p>每个流程环节都明确告诉你“AI能在哪里帮你、怎么用”，图文、视频保姆级教程让工具真正为你所用，而不是停留在“AI能做科研”的口号里。</p>
+                    <h2>审核机制</h2>
+                    <p>全部内容经由心理学系于晓副教授课题组逐环节审核把关，确保方法准确、操作规范、流程严谨。</p>
                 </div>
                 <div class="scroll-stack-card">
-                    <h2>从科研小白到高手，全链条覆盖</h2>
-                    <p>流程导航 × 学术素养 × 资源共享，三大板块一站覆盖——不只教你跑完流程，还帮你建立自己的学术审美和规范意识，走得更稳。</p>
+                    <h2>更新进度</h2>
+                    <p>截至2026年6月，网站核心教程内容已全部上线，后续将持续迭代优化，补充前沿方法与案例。</p>
                 </div>
                 <div class="scroll-stack-card">
-                    <h2>教授课题组资源直供</h2>
-                    <p>写作范例、审美素材与数据分析资源由于晓副教授课题组倾情提供，你用的不是随手搜来的资料，而是经过学术检验的高质量内容。</p>
+                    <h2>引用与转载</h2>
+                    <p>本站内容仅供教学与科研参考，如需引用或转载，请注明出处并遵守学术规范。</p>
                 </div>
                 <div class="scroll-stack-end"></div>
             </div>
         </div>
         <button class="btn-primary interactive-hover-btn" id="enter-main-btn" type="button">
             <span class="interactive-hover-btn__bg" aria-hidden="true"></span>
-            <span class="interactive-hover-btn__text">进入平台</span>
+            <span class="interactive-hover-btn__text">立即开始科研流程</span>
             <span class="interactive-hover-btn__icon" aria-hidden="true">
                 <span class="interactive-hover-btn__icon-inner">→</span>
             </span>
         </button>
     </div>
 </div>
-<script src="js/common.js?v=23"></script>
+<script src="js/common.js?v=25"></script>
 <script>
     document.getElementById('enter-main-btn').addEventListener('click', handleLogin);
 </script>

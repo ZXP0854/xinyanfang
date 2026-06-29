@@ -1207,18 +1207,34 @@ function initBlurText() {
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     elements.forEach(el => {
-        const text = el.textContent;
+        const lineText = el.dataset.blurLines || '';
+        const lines = lineText ? lineText.split('|') : null;
+        const text = lines ? lines.join('') : el.textContent;
         el.setAttribute('aria-label', text);
         el.textContent = '';
 
-        Array.from(text).forEach((char, index) => {
+        let charIndex = 0;
+        const appendSegment = (parent, char) => {
             const span = document.createElement('span');
             span.className = 'blur-text-segment';
             span.setAttribute('aria-hidden', 'true');
             span.textContent = char === ' ' ? '\u00A0' : char;
-            span.style.animationDelay = `${index * 90}ms`;
-            el.appendChild(span);
-        });
+            span.style.animationDelay = `${charIndex * 90}ms`;
+            parent.appendChild(span);
+            charIndex += 1;
+        };
+
+        if (lines) {
+            lines.forEach(line => {
+                const lineEl = document.createElement('span');
+                lineEl.className = 'blur-text-line';
+                lineEl.setAttribute('aria-hidden', 'true');
+                Array.from(line).forEach(char => appendSegment(lineEl, char));
+                el.appendChild(lineEl);
+            });
+        } else {
+            Array.from(text).forEach(char => appendSegment(el, char));
+        }
 
         if (reduceMotion) {
             el.classList.add('in-view');
@@ -1367,4 +1383,53 @@ document.addEventListener('DOMContentLoaded', () => {
             closeResourceModal();
         }
     });
+
+    // ─── 统计追踪 ───
+    trackStatsEvent('page_view', window.location.pathname || '/');
+    initPromptCopyTracking();
 });
+
+// ─── 统计追踪功能 ───
+function trackStatsEvent(eventType, eventKey) {
+    try {
+        fetch('/api/stats/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event_type: eventType, event_key: eventKey || '' }),
+        }).catch(function() {});
+    } catch(e) {}
+}
+
+// 资源点击追踪（在 showResourceModal 中调用）
+var _origShowResourceModal = showResourceModal;
+showResourceModal = function(name, description, url) {
+    trackStatsEvent('resource_click', name);
+    _origShowResourceModal(name, description, url);
+};
+
+// 教程观看追踪：在 renderDetail 成功后调用
+var _origRenderDetail = renderDetail;
+renderDetail = function(nodeId) {
+    trackStatsEvent('tutorial_view', nodeId);
+    _origRenderDetail(nodeId);
+};
+
+// 提示词复制追踪：监听教程内容区的复制事件
+var _promptCopyTimer = null;
+function initPromptCopyTracking() {
+    document.addEventListener('copy', function(e) {
+        var sel = window.getSelection();
+        if (!sel || !sel.toString().trim()) return;
+        var text = sel.toString().trim();
+        // 只追踪超过20个字符的复制（过滤短文本和误触）
+        if (text.length < 20) return;
+        // 检查是否在教程内容区域
+        var container = e.target.closest('#tutorial-detail, #article-body, .tutorial-rich, .rich-text');
+        if (!container) return;
+        clearTimeout(_promptCopyTimer);
+        _promptCopyTimer = setTimeout(function() {
+            var label = text.substring(0, 80).replace(/\n/g, ' ');
+            trackStatsEvent('prompt_copy', label);
+        }, 500);
+    });
+}
