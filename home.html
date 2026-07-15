@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +6,7 @@
     <title>心研坊 · 首页</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=29">
+    <link rel="stylesheet" href="css/style.css?v=40">
 </head>
 <body>
 <div class="top-nav">
@@ -56,6 +56,51 @@
 <!-- 来自 txh 的圆环 -->
 <div class="container" style="padding-top: 0;">
     <div class="ring-container" id="ringNavContainer"></div>
+    <div class="quick-start-flow" aria-label="快速入门流程">
+        <div class="quick-start-hook">太复杂了吗？看这里！30分钟快速入门</div>
+        <div class="quick-start-pointer" aria-hidden="true">
+            <i class="fa-solid fa-hand-point-down"></i>
+        </div>
+        <p class="quick-start-intro">
+                <span class="quick-start-lead">提供从选题到写作的快速入门流程，帮助新手在30分钟内理清研究脉络，</span><br>告别不知从何下手的迷茫。
+        </p>
+        <div class="quick-start-row">
+            <div class="quick-start-rail quick-start-rail-left">先从这六步开始吧！</div>
+            <div class="quick-start-list">
+                <a class="quick-start-card" href="workflow.html?node=1-2">
+                    <span class="quick-start-code">1-2</span>
+                    <span class="quick-start-title">研究前沿选题与评估</span>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <a class="quick-start-card" href="workflow.html?node=2-1">
+                    <span class="quick-start-code">2-1</span>
+                    <span class="quick-start-title">研究变量关系梳理</span>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <a class="quick-start-card" href="workflow.html?node=3-2">
+                    <span class="quick-start-code">3-2</span>
+                    <span class="quick-start-title">样本量规划</span>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <a class="quick-start-card" href="workflow.html?node=4-3">
+                    <span class="quick-start-code">4-3</span>
+                    <span class="quick-start-title">数据清洗与描述性统计</span>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <a class="quick-start-card" href="workflow.html?node=5-1-1">
+                    <span class="quick-start-code">5-1-1</span>
+                    <span class="quick-start-title">研究结果的呈现方式</span>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <a class="quick-start-card" href="workflow.html?node=5-1-2">
+                    <span class="quick-start-code">5-1-2</span>
+                    <span class="quick-start-title">研究结果的数据解读</span>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+            <div class="quick-start-rail quick-start-rail-right">点击直达详细内容</div>
+        </div>
+    </div>
 </div>
 
 <!-- 来自 mwq 的"提升科研审美"预览板块 -->
@@ -113,13 +158,16 @@
 <footer>
     <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
         <span>心研坊 · 心理学研究方法辅助平台</span>
+        <span>本网站部分 UI 组件来源于开源组件库Inspira UI，基于 MIT 协议使用。</span>
         <span> 开发共建中</span>
     </div>
 </footer>
 
-<script src="js/common.js?v=25"></script>
+<script src="js/common.js?v=34"></script>
 <script>
     createRingSVG('ringNavContainer');
 </script>
 </body>
 </html>
+
+

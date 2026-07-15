@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from app import create_app, init_db
 from models import db, Tutorial, Resource, Card
+from resource_descriptions import get_resource_description
 
 app = create_app(os.environ.get('FLASK_ENV', 'development'))
 
@@ -131,10 +132,11 @@ def seed_resources():
     ]
 
     for i, r in enumerate(resources):
+        description = get_resource_description(r['module'], r['name']) or r.get('description', '')
         db.session.add(Resource(
             module=r['module'],
             name=r['name'],
-            description=r.get('description', ''),
+            description=description,
             link_type=r['link_type'],
             link_value=r['link_value'],
             sort_order=i,

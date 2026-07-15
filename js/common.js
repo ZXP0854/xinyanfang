@@ -123,14 +123,168 @@ function getTutorialIntro(nodeId) {
         '</div></div></div>';
 }
 
-function getTutorialTemplate(nodeId, nodeName) {
+function getWorkflowSectionContent(nodeId, sectionKey, nodeName) {
+    var workflowData = (typeof window !== 'undefined' && window.WORKFLOW_SECTION_CONTENT) ? window.WORKFLOW_SECTION_CONTENT : null;
+    if (workflowData && workflowData[nodeId] && Object.prototype.hasOwnProperty.call(workflowData[nodeId], sectionKey)) {
+        return workflowData[nodeId][sectionKey] || '';
+    }
+    var sectionMap = {
+        learningCost: '这一部分说明该教程需要的前置知识、时间投入和学习难度，帮助你先判断是否适合现在开始。',
+        useScenarios: '这一部分说明该方法适合哪类研究问题、数据类型和论文阶段，方便你快速判断使用场景。',
+        accomplishments: '这一部分说明学完后你能直接完成什么，帮助你把“看懂教程”转化为“拿到产出”。',
+        recommendedTools: '这一部分列出常用工具和软件，帮助你在开始前先准备好对应环境。',
+        commonMistakes: '这一部分总结最容易踩坑的地方，方便你在实际操作前提前规避。',
+        finalTemplate: '这一部分提供最终可直接套用的写作或输出模板，方便你复制后继续调整。',
+    };
+    return sectionMap[sectionKey] || ('这里预留给 "' + nodeName + '" 的结构化内容。');
+}
+
+function buildWorkflowSection(index, title, bodyHtml, open) {
     return `
-        <div class="detail-title"><h3 class="serif serif-xs">${nodeId} ${nodeName}</h3></div>
-        <div>
-            <p style="margin-bottom: 20px;">【教程说明】此处将提供关于"${nodeName}"的详细方法介绍、操作步骤与心理学研究示例。</p>
-            ${getRichContent(nodeId, nodeName)}
+        <details class="workflow-section"${open ? ' open' : ''}>
+            <summary class="workflow-section__summary">
+                <span class="workflow-section__label">
+                    <span class="workflow-section__index">${index}</span>
+                    <span class="workflow-section__title">${title}</span>
+                </span>
+                <span class="workflow-section__state">
+                    <span class="workflow-section__state-open">收起</span>
+                    <span class="workflow-section__state-closed">展开</span>
+                </span>
+            </summary>
+            <div class="workflow-section__body">
+                ${bodyHtml}
+            </div>
+        </details>
+    `;
+}
+
+const AI_WORKFLOW_NODE_IDS = new Set([
+    '1-2',
+    '2-1',
+    '2-2-1',
+    '2-2-2',
+    '3-1-1',
+    '3-1-2',
+    '3-2',
+    '3-3',
+    '4-2-2',
+    '4-3',
+    '4-4-1',
+    '4-4-2',
+    '4-5-1',
+    '4-5-2',
+    '5-1-1',
+    '5-1-2',
+    '5-2',
+    '5-3',
+]);
+
+function buildWorkflowAiNotice(nodeId) {
+    if (!AI_WORKFLOW_NODE_IDS.has(nodeId)) return '';
+    return `
+        <div class="workflow-ai-notice" role="note">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <strong>注意：</strong>
+            <span>AI可辅助，但不能替代伦理审查、统计判断和导师确认。</span>
         </div>
     `;
+}
+
+function buildWorkflowDetailHtml(nodeId, nodeName, html) {
+    return `
+        <div class="detail-title"><h3 class="serif serif-xs">${nodeId} ${nodeName}</h3></div>
+        ${getTutorialIntro(nodeId)}
+        <div class="workflow-accordion">
+            ${buildWorkflowSection('01', '学习成本', '<div class="workflow-section-copy"><p>' + getWorkflowSectionContent(nodeId, 'learningCost', nodeName) + '</p></div>', true)}
+            ${buildWorkflowSection('02', '适用场景', '<div class="workflow-section-copy"><p>' + getWorkflowSectionContent(nodeId, 'useScenarios', nodeName) + '</p></div>', true)}
+            ${buildWorkflowSection('03', '你将完成什么', '<div class="workflow-section-copy"><p>' + getWorkflowSectionContent(nodeId, 'accomplishments', nodeName) + '</p></div>', true)}
+            ${buildWorkflowSection('04', '推荐工具', '<div class="workflow-section-copy"><p>' + getWorkflowSectionContent(nodeId, 'recommendedTools', nodeName) + '</p></div>', true)}
+            ${buildWorkflowSection('05', '视频及图文教程', '<div class="workflow-section-html">' + (html || '') + '</div>', true)}
+            ${buildWorkflowSection('06', '常见错误', '<div class="workflow-section-copy"><p>' + getWorkflowSectionContent(nodeId, 'commonMistakes', nodeName) + '</p></div>', true)}
+            ${buildWorkflowSection('07', '最终产出模板', '<div class="workflow-section-copy"><p>' + getWorkflowSectionContent(nodeId, 'finalTemplate', nodeName) + '</p></div>', true)}
+        </div>
+        ${buildWorkflowAiNotice(nodeId)}
+    `;
+}
+
+function escapeWorkflowPrefaceHtml(text) {
+    return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderWorkflowPrefaceText(text) {
+    const lines = String(text || '').split(/\r?\n/);
+    const html = [];
+    lines.forEach(function(rawLine) {
+        const line = rawLine.trim();
+        if (!line) return;
+        const clean = escapeWorkflowPrefaceHtml(line.replace(/^#+\s*/, ''));
+        if (line.indexOf('写在前面') !== -1) {
+            html.push('<h4 class="workflow-preface-title">' + clean + '</h4>');
+        } else if (/^###\s*/.test(line)) {
+            html.push('<h5 class="workflow-preface-stage">' + clean + '</h5>');
+        } else if (line.indexOf('当前节点：') !== -1) {
+            html.push('<p class="workflow-preface-node">' + clean + '</p>');
+        } else if (line.indexOf('教程标题：') === 0 || line.indexOf('我做了什么：') === 0 || line.indexOf('我得到了什么：') === 0) {
+            html.push('<p class="workflow-preface-copy workflow-preface-emphasis">' + clean + '</p>');
+        } else {
+            html.push('<p class="workflow-preface-copy">' + clean + '</p>');
+        }
+    });
+    return html.join('');
+}
+
+function loadWorkflowPreface() {
+    const targets = Array.from(document.querySelectorAll('.workflow-preface-content, #workflow-preface'));
+    if (!targets.length) return;
+    const renderTargets = function(text) {
+        const html = renderWorkflowPrefaceText(text);
+        targets.forEach(function(target) {
+            target.innerHTML = html;
+            target.style.display = '';
+        });
+    };
+    const inlineSource = document.getElementById('workflow-preface-source');
+    if (inlineSource && inlineSource.textContent.trim()) {
+        renderTargets(inlineSource.textContent);
+        return;
+    }
+    fetch('workflow-preface.txt?v=1')
+        .then(function(response) {
+            if (!response.ok) throw new Error('preface not found');
+            return response.text();
+        })
+        .then(function(text) {
+            renderTargets(text);
+        })
+        .catch(function() {
+            targets.forEach(function(target) {
+                target.style.display = 'none';
+            });
+        });
+}
+
+function buildWorkflowEmptyState() {
+    return `
+        <div class="detail-title"><h3 class="serif serif-xs">选择教程节点</h3></div>
+        <div id="detail-content">
+            <p>请从左侧树状图中选择一个研究方法步骤，右侧将显示详细教程框架。</p>
+            <div id="workflow-preface" class="workflow-preface workflow-preface-content" aria-live="polite"></div>
+        </div>
+    `;
+}
+
+function getTutorialTemplate(nodeId, nodeName) {
+    return buildWorkflowDetailHtml(
+        nodeId,
+        nodeName,
+        getRichContent(nodeId, nodeName)
+    );
 }
 
 // 针对特定节点的图文并茂排版（放在"教程说明"文字下面）
@@ -176,10 +330,17 @@ function getRichContent(nodeId, nodeName) {
 
 // 渲染教程详情（优先API，降级硬编码）
 function renderDetail(nodeId) {
-    const node = treeData.find(n => n.id === nodeId);
-    if (!node) return;
     const detailDiv = document.getElementById('tutorial-detail');
     if (!detailDiv) return;
+
+    if (!nodeId) {
+        detailDiv.innerHTML = buildWorkflowEmptyState();
+        loadWorkflowPreface();
+        return;
+    }
+
+    const node = treeData.find(n => n.id === nodeId);
+    if (!node) return;
 
     // 高亮当前节点
     document.querySelectorAll('.tree-node-level1, .tree-node-level2').forEach(el => {
@@ -200,11 +361,7 @@ function renderDetail(nodeId) {
             if (data.tutorial && data.tutorial.content) {
                 // API有内容 → 渲染
                 var html = data.tutorial.content;
-                // 教程说明在标题和内容之间
-                detailDiv.innerHTML =
-                    '<div class="detail-title"><h3 class="serif serif-xs">' + node.id + ' ' + node.name + '</h3></div>' +
-                    getTutorialIntro(nodeId) +
-                    '<div>' + html + '</div>';
+                detailDiv.innerHTML = buildWorkflowDetailHtml(node.id, node.name, html);
             } else {
                 // 无API内容 → 降级到硬编码
                 detailDiv.innerHTML = getTutorialTemplate(node.id, node.name);
@@ -853,7 +1010,7 @@ function highlightNav() {
     document.querySelectorAll('.nav-links a').forEach(link => {
         link.classList.remove('active');
         const href = link.getAttribute('href');
-        if (href === filename) link.classList.add('active');
+        if (href === filename || (filename === 'prompt-library.html' && href === 'resources.html')) link.classList.add('active');
     });
 }
 function toggleNav() {
@@ -933,6 +1090,7 @@ function matchScore(item, keyword) {
 function performSearch() {
     var keyword = document.getElementById('searchInput').value.trim();
     var dropdown = document.getElementById('searchDropdown');
+    closeSearchHotPanel();
     if (!dropdown) {
         // 创建下拉容器
         dropdown = document.createElement('div');
@@ -1024,6 +1182,68 @@ function highlightMatch(text, keyword) {
 function closeSearchResults() {
     var dropdown = document.getElementById('searchDropdown');
     if (dropdown) dropdown.classList.remove('visible');
+}
+
+function closeSearchHotPanel() {
+    var panel = document.getElementById('searchHotPanel');
+    if (panel) panel.classList.remove('visible');
+}
+
+function openSearchHotPanel() {
+    var panel = document.getElementById('searchHotPanel');
+    var input = document.getElementById('searchInput');
+    var results = document.getElementById('searchDropdown');
+    if (!panel || !input) return;
+    if (input.value.trim()) return;
+    if (results && results.classList.contains('visible')) return;
+    panel.classList.add('visible');
+}
+
+function initSearchHotPanel() {
+    var searchContainer = document.querySelector('.search-container');
+    var searchInput = document.getElementById('searchInput');
+    if (!searchContainer || !searchInput || document.getElementById('searchHotPanel')) return;
+
+    var hotTerms = ['AI提示词', '样本量规划', '数据清洗', '变量关系', '交叉滞后模型', 'Zotero'];
+    var panel = document.createElement('div');
+    panel.id = 'searchHotPanel';
+    panel.className = 'search-hot-panel';
+    panel.innerHTML =
+        '<div class="search-hot-title"><i class="fa-solid fa-fire"></i><span>热搜词</span></div>' +
+        '<div class="search-hot-list">' +
+        hotTerms.map(function(term) {
+            return '<button type="button" class="search-hot-term" data-term="' + term + '">' + term + '</button>';
+        }).join('') +
+        '</div>';
+    searchContainer.appendChild(panel);
+
+    var hideTimer = null;
+    function scheduleHide() {
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(closeSearchHotPanel, 120);
+    }
+    function showPanel() {
+        clearTimeout(hideTimer);
+        openSearchHotPanel();
+    }
+
+    searchContainer.addEventListener('mouseenter', showPanel);
+    searchContainer.addEventListener('mouseleave', scheduleHide);
+    searchContainer.addEventListener('focusin', showPanel);
+    searchContainer.addEventListener('focusout', scheduleHide);
+    searchInput.addEventListener('input', function() {
+        if (searchInput.value.trim()) closeSearchHotPanel();
+        else openSearchHotPanel();
+    });
+    panel.querySelectorAll('.search-hot-term').forEach(function(button) {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            searchInput.value = button.getAttribute('data-term') || '';
+            closeSearchHotPanel();
+            performSearch();
+            searchInput.focus();
+        });
+    });
 }
 
 function handleSearch() {
@@ -1315,6 +1535,91 @@ function closeResourceModal() {
     document.body.style.overflow = '';
 }
 
+function initUserPanelShell() {
+    const topNav = document.querySelector('.top-nav');
+    if (!topNav || document.getElementById('user-avatar-btn')) return;
+
+    const userShell = document.createElement('div');
+    userShell.className = 'user-shell';
+    userShell.innerHTML = `
+        <button type="button" id="user-avatar-btn" class="user-avatar-btn" aria-label="打开用户信息">
+            <i class="fa-solid fa-user"></i>
+        </button>
+    `;
+    topNav.appendChild(userShell);
+
+    const panel = document.createElement('div');
+    panel.className = 'user-panel-overlay';
+    panel.id = 'user-panel-overlay';
+    panel.setAttribute('aria-hidden', 'true');
+    panel.innerHTML = `
+        <aside class="user-panel" aria-label="用户信息侧栏">
+            <button type="button" class="user-panel-close" aria-label="关闭用户信息">&times;</button>
+            <div class="user-panel-head">
+                <div class="user-panel-avatar"><i class="fa-solid fa-user"></i></div>
+                <div>
+                    <h3>用户信息</h3>
+                    <p>当前为空壳演示</p>
+                </div>
+            </div>
+            <div class="user-panel-section">
+                <div class="user-info-row"><span>账号状态</span><strong>未连接后端</strong></div>
+                <div class="user-info-row"><span>账号名称</span><strong>暂未登录</strong></div>
+                <a class="user-auth-link" href="auth.html">成为/已是注册用户</a>
+            </div>
+            <button type="button" class="user-history-trigger" id="user-history-trigger">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>历史记录</span>
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </aside>
+    `;
+    document.body.appendChild(panel);
+
+    const historyModal = document.createElement('div');
+    historyModal.className = 'user-history-modal';
+    historyModal.id = 'user-history-modal';
+    historyModal.setAttribute('aria-hidden', 'true');
+    historyModal.innerHTML = `
+        <div class="user-history-card">
+            <button type="button" class="user-history-close" aria-label="关闭历史记录">&times;</button>
+            <div class="user-history-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <h3>历史记录</h3>
+            <p>这里将显示用户之前的研究路径和浏览记录。</p>
+            <div class="user-history-empty">暂无历史记录</div>
+        </div>
+    `;
+    document.body.appendChild(historyModal);
+
+    const openPanel = () => {
+        panel.classList.add('visible');
+        panel.setAttribute('aria-hidden', 'false');
+    };
+    const closePanel = () => {
+        panel.classList.remove('visible');
+        panel.setAttribute('aria-hidden', 'true');
+    };
+    const openHistory = () => {
+        historyModal.classList.add('visible');
+        historyModal.setAttribute('aria-hidden', 'false');
+    };
+    const closeHistory = () => {
+        historyModal.classList.remove('visible');
+        historyModal.setAttribute('aria-hidden', 'true');
+    };
+
+    document.getElementById('user-avatar-btn').addEventListener('click', openPanel);
+    panel.querySelector('.user-panel-close').addEventListener('click', closePanel);
+    panel.addEventListener('click', function(event) {
+        if (event.target === panel) closePanel();
+    });
+    panel.querySelector('#user-history-trigger').addEventListener('click', openHistory);
+    historyModal.querySelector('.user-history-close').addEventListener('click', closeHistory);
+    historyModal.addEventListener('click', function(event) {
+        if (event.target === historyModal) closeHistory();
+    });
+}
+
 function loadAestheticCards() {
     const masonry = document.querySelector('.masonry');
     if (!masonry) return;
@@ -1368,6 +1673,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initMasonryReveal();
     initScrollStack();
     initBlurText();
+    initUserPanelShell();
+    initSearchHotPanel();
+    loadWorkflowPreface();
     // 资源弹窗关闭按钮
     const rmClose = document.querySelector('.resource-modal-close');
     if (rmClose) rmClose.addEventListener('click', closeResourceModal);
@@ -1410,7 +1718,7 @@ showResourceModal = function(name, description, url) {
 // 教程观看追踪：在 renderDetail 成功后调用
 var _origRenderDetail = renderDetail;
 renderDetail = function(nodeId) {
-    trackStatsEvent('tutorial_view', nodeId);
+    if (nodeId) trackStatsEvent('tutorial_view', nodeId);
     _origRenderDetail(nodeId);
 };
 

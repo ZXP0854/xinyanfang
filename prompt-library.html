@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心研坊 · AI提示词（prompt）资源库</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=40">
+</head>
+<body>
+<div class="top-nav">
+    <a href="index.html" class="logo"><img src="logo.png" alt="心研坊" style="height:36px;"><span>心研坊</span></a>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="搜索教程、资源..." autocomplete="off">
+        <button onclick="handleSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+    <button class="nav-toggle" onclick="toggleNav()"><i class="fa-solid fa-bars"></i></button>
+    <div class="nav-links" id="navLinks">
+        <a href="home.html">首页</a>
+        <a href="workflow.html">掌握科研流程</a>
+        <a href="aesthetics.html">提升科研审美</a>
+        <a href="resources.html">获取科研资源</a>
+        <a href="about.html">关于与简介</a>
+    </div>
+</div>
+<div class="page-banner">
+    <h1>AI提示词（prompt）资源库</h1>
+    <p>聚合科研中常用的 AI 提示词，帮助你更高效地使用 AI 辅助选题、建模、伦理材料与结果解释。</p>
+</div>
+<div class="container" style="padding-top: 0;">
+    <div class="prompt-library-intro">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>选择左侧分支，即可查看对应科研场景下可直接复制使用的 prompt。</span>
+    </div>
+    <div class="flow-layout prompt-layout">
+        <div class="tree-sidebar" id="prompt-tree-container"></div>
+        <div class="detail-area" id="prompt-detail"></div>
+    </div>
+</div>
+<footer>
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>心研坊 · 心理学研究方法辅助平台</span>
+        <span>本网站部分 UI 组件来源于开源组件库Inspira UI，基于 MIT 协议使用。</span>
+        <span>开发共建中</span>
+    </div>
+</footer>
+<script src="js/common.js?v=34"></script>
+<script src="js/prompt-data.js?v=1"></script>
+<script src="js/prompt-library.js?v=2"></script>
+<script>
+    initPromptLibrary();
+    document.querySelectorAll('.nav-links a[href="resources.html"]').forEach(function(link) {
+        link.classList.add('active');
+    });
+</script>
+</body>
+</html>

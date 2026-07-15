@@ -6,7 +6,7 @@
     <title>心研坊</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=29">
+    <link rel="stylesheet" href="css/style.css?v=40">
 </head>
 <body>
 <div id="login-page">
@@ -90,18 +90,41 @@
                 <div class="scroll-stack-end"></div>
             </div>
         </div>
-        <button class="btn-primary interactive-hover-btn" id="enter-main-btn" type="button">
-            <span class="interactive-hover-btn__bg" aria-hidden="true"></span>
-            <span class="interactive-hover-btn__text">立即开始科研流程</span>
-            <span class="interactive-hover-btn__icon" aria-hidden="true">
-                <span class="interactive-hover-btn__icon-inner">→</span>
-            </span>
-        </button>
+        <div class="index-entry-actions">
+            <button class="btn-primary interactive-hover-btn" id="auth-entry-btn" type="button">
+                <span class="interactive-hover-btn__bg" aria-hidden="true"></span>
+                <span class="interactive-hover-btn__text">成为/已是注册用户</span>
+                <span class="interactive-hover-btn__icon" aria-hidden="true">
+                    <span class="interactive-hover-btn__icon-inner">→</span>
+                </span>
+            </button>
+            <button class="btn-primary interactive-hover-btn" id="enter-main-btn" type="button">
+                <span class="interactive-hover-btn__bg" aria-hidden="true"></span>
+                <span class="interactive-hover-btn__text">不注册了，立即开始科研流程</span>
+                <span class="interactive-hover-btn__icon" aria-hidden="true">
+                    <span class="interactive-hover-btn__icon-inner">→</span>
+                </span>
+            </button>
+        </div>
+        <p class="index-warning">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span>只有成为注册用户才能保留您之前的历史记录；<br>建议您进行注册，以便查看之前的研究路径。</span>
+        </p>
     </div>
 </div>
-<script src="js/common.js?v=25"></script>
+<footer>
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>心研坊 · 心理学研究方法辅助平台</span>
+        <span>本网站部分 UI 组件来源于开源组件库Inspira UI，基于 MIT 协议使用。</span>
+        <span>开发共建中</span>
+    </div>
+</footer>
+<script src="js/common.js?v=34"></script>
 <script>
     document.getElementById('enter-main-btn').addEventListener('click', handleLogin);
+    document.getElementById('auth-entry-btn').addEventListener('click', function() {
+        window.location.href = 'auth.html';
+    });
 </script>
 </body>
 </html>

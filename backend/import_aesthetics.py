@@ -1,4 +1,4 @@
-"""
+﻿"""
 批量导入审美教程（v3 — 健壮版）
 扫描 static/uploads/ 中的【CJ】【FF】【Mplus】【SC】文件
 匹配18个审美教程并导入，同步创建统一规格的审美卡片
@@ -64,6 +64,27 @@ CATEGORY_META = {
 }
 
 CARD_HEIGHT = 220  # 统一卡片高度
+
+CARD_SUMMARIES = {
+    10772: '提供BCH三步法核心语句框架，帮助新手完成潜类别在远端结果变量上的均值差异检验。',
+    10839: '提供多层次结构方程模型语句，解决嵌套数据带来的标准误偏误问题，使结果更可靠。',
+    15843: '提供带交互项的增长模型语句，帮助新手检验协变量间的调节效应如何影响个体发展轨迹的截距与斜率',
+    12743: '提供单指标与并行过程潜类别增长模型语句，便于新手对比拟合指标并结合轨迹图形状与类别概率，初步筛选合理的增长轨迹类型。',
+    10730: '提供交叉滞后模型代码，帮助新手考察纵向数据中变量间跨时间的优先性关系。',
+    2609909: '通过数据视角梳理该刊发文热点，帮助新手明确选题偏好和投稿方向。',
+    5596740: '拆解顶刊标题与摘要的常见结构，提供可直接套用的拟题和写作模板。',
+    8365071: '拆解顶刊的图表呈现方式和统计汇报话术，规范新手的数据展示写法。',
+    6689501: '提供顶刊的基础格式规范，避免因格式问题被退稿或反复修改。',
+    10203726: '拆解顶刊如何将数据结果上升为理论贡献，帮助新手写出有深度的讨论。',
+    19579742: '拆解顶刊“漏斗式”引言结构，提供段落逻辑模板，解决引言写作无从下笔的问题。',
+    903530: '提供针对复杂动态模型的写作切入点，帮助新手清晰解释变量间的纵向关系。',
+    2743761: '提供论述框架，帮助新手理顺纵向中介的写作逻辑。',
+    18676832: '提供审稿意见回复的话术模板，帮助新手礼貌且有效地回应审稿人，提高复审通过率。',
+    7105662: '教新手根据关键词匹配目标期刊，避免因选刊不当而延误发表。',
+    21119026: '梳理从投稿到接收的完整流程，帮助新手了解各阶段时间节点，缓解等待焦虑。',
+    21129977: '提供英文文献综述结构教学，帮助新手避免文献堆砌，写出有见地的综述。',
+    48789: '汇总顶刊高频句式模板，方便新手直接替换生成地道、规范的英文摘要。',
+}
 
 uploads_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
 app = create_app('production')
@@ -132,6 +153,7 @@ with app.app_context():
         try:
             # 2a) 按文件大小精确匹配
             filepath = find_file(size, ext)
+            summary = CARD_SUMMARIES.get(size, title)
             if not filepath:
                 print(f'  [SKIP] 未找到 {ext} 文件（大小: {size} 字节）')
                 skipped += 1
@@ -163,7 +185,7 @@ with app.app_context():
             t = Tutorial(
                 node_id=f'aes-tmp-{created+1}',
                 title=title,
-                summary=title,
+                summary=summary,
                 content=html_body,
                 category='aesthetics',
                 is_published=True,
@@ -176,7 +198,7 @@ with app.app_context():
             meta = CATEGORY_META.get(category, {'icon': 'fa-solid fa-file', 'image': ''})
             c = Card(
                 title=title,
-                description='',
+                description=summary,
                 icon=meta['icon'],
                 tag=category,
                 height=CARD_HEIGHT,
@@ -225,3 +247,5 @@ with app.app_context():
     for c in Card.query.order_by(Card.sort_order).all():
         img = 'Y' if c.image_url else 'N'
         print(f'  [CARD #{c.id}] {c.title[:45]:45s} tag={c.tag} img={img}')
+
+
