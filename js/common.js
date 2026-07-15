@@ -200,7 +200,7 @@ function buildWorkflowDetailHtml(nodeId, nodeName, html) {
             ${buildWorkflowSection('02', '适用场景', '<div class="workflow-section-copy"><p>' + getWorkflowSectionContent(nodeId, 'useScenarios', nodeName) + '</p></div>', true)}
             ${buildWorkflowSection('03', '你将完成什么', '<div class="workflow-section-copy"><p>' + getWorkflowSectionContent(nodeId, 'accomplishments', nodeName) + '</p></div>', true)}
             ${buildWorkflowSection('04', '推荐工具', '<div class="workflow-section-copy"><p>' + getWorkflowSectionContent(nodeId, 'recommendedTools', nodeName) + '</p></div>', true)}
-            ${buildWorkflowSection('05', '视频及图文教程', '<div class="workflow-section-html">' + (html || '') + '</div>', true)}
+            ${buildWorkflowSection('05', '视频及图文教程', '<div class="workflow-section-html">' + (html || '<p style="color:var(--muted);text-align:center;padding:2rem 0;">教程内容正在建设中，敬请期待……</p>') + '</div>', true)}
             ${buildWorkflowSection('06', '常见错误', '<div class="workflow-section-copy"><p>' + getWorkflowSectionContent(nodeId, 'commonMistakes', nodeName) + '</p></div>', true)}
             ${buildWorkflowSection('07', '最终产出模板', '<div class="workflow-section-copy"><p>' + getWorkflowSectionContent(nodeId, 'finalTemplate', nodeName) + '</p></div>', true)}
         </div>
@@ -280,11 +280,7 @@ function buildWorkflowEmptyState() {
 }
 
 function getTutorialTemplate(nodeId, nodeName) {
-    return buildWorkflowDetailHtml(
-        nodeId,
-        nodeName,
-        getRichContent(nodeId, nodeName)
-    );
+    return buildWorkflowDetailHtml(nodeId, nodeName, '');
 }
 
 // 针对特定节点的图文并茂排版（放在"教程说明"文字下面）
@@ -358,23 +354,18 @@ function renderDetail(nodeId) {
     fetch('/api/tutorials/' + encodeURIComponent(nodeId))
         .then(function(r) { return r.json(); })
         .then(function(data) {
+            var tutorialHtml = '';
             if (data.tutorial && data.tutorial.content) {
-                // API有内容 → 直接渲染视频+图文教程
-                var html = data.tutorial.content;
-                detailDiv.innerHTML =
-                    '<div class="detail-title"><h3 class="serif serif-xs">' + node.id + ' ' + node.name + '</h3></div>' +
-                    getTutorialIntro(nodeId) +
-                    '<div>' + html + '</div>';
-            } else {
-                // 无API内容 → 降级到结构化展示
-                detailDiv.innerHTML = getTutorialTemplate(node.id, node.name);
+                tutorialHtml = data.tutorial.content;
             }
+            // 始终用结构化布局，API内容放入"视频及图文教程"区域
+            detailDiv.innerHTML = buildWorkflowDetailHtml(node.id, node.name, tutorialHtml);
             fixPdfEmbeds();
             attachImageModalHandlers();
         })
         .catch(function() {
             // 网络错误 → 降级
-            detailDiv.innerHTML = getTutorialTemplate(node.id, node.name);
+            detailDiv.innerHTML = buildWorkflowDetailHtml(node.id, node.name, '');
             fixPdfEmbeds();
             attachImageModalHandlers();
         });
