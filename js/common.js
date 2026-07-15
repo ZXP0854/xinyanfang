@@ -359,11 +359,14 @@ function renderDetail(nodeId) {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.tutorial && data.tutorial.content) {
-                // API有内容 → 渲染
+                // API有内容 → 直接渲染视频+图文教程
                 var html = data.tutorial.content;
-                detailDiv.innerHTML = buildWorkflowDetailHtml(node.id, node.name, html);
+                detailDiv.innerHTML =
+                    '<div class="detail-title"><h3 class="serif serif-xs">' + node.id + ' ' + node.name + '</h3></div>' +
+                    getTutorialIntro(nodeId) +
+                    '<div>' + html + '</div>';
             } else {
-                // 无API内容 → 降级到硬编码
+                // 无API内容 → 降级到结构化展示
                 detailDiv.innerHTML = getTutorialTemplate(node.id, node.name);
             }
             fixPdfEmbeds();
