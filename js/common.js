@@ -1367,7 +1367,9 @@ function getSearchDesc(item, keyword) {
     var start = Math.max(0, idx - 40);
     var end = Math.min(ft.length, idx + kw.length + 60);
     var snip = (start > 0 ? '…' : '') + ft.substring(start, end) + (end < ft.length ? '…' : '');
-    return snip.replace(kw, '<!--kw-->' + kw + '<!--/kw-->').replace(/<!--kw-->/g, '<mark>').replace(/<!--\\/kw-->/g, '</mark>');
+    var marked = snip.replace(kw, '%%KW%%' + kw + '%%/KW%%');
+    marked = marked.replace(/%%KW%%/g, '<mark>').replace(/%%\/KW%%/g, '</mark>');
+    return marked;
 }
 
 function performSearchBig() {
