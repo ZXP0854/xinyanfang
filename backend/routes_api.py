@@ -427,25 +427,62 @@ def ai_ask():
 
 
 def _search_local(keyword):
-    """从本地数据库搜索匹配的教程和资源"""
+    """从本地数据库搜索匹配的教程和资源，支持整句分词回退"""
     results = []
-    kw = keyword.lower()
+    seen_titles = set()
+    kw = keyword.strip()
 
-    # 搜索教程（标题 + 摘要 + content）
+    # 整句先搜一次
+    _search_tutorials(kw, results, seen_titles)
+    _search_resources(kw, results, seen_titles)
+
+    # 如果没结果，拆词搜索
+    if len(results) == 0 and len(kw) > 3:
+        words = _split_keywords(kw)
+        for w in words:
+            if w == kw or len(w) < 2:
+                continue
+            _search_tutorials(w, results, seen_titles)
+            _search_resources(w, results, seen_titles)
+        results.sort(key=lambda x: x.get('score', 0), reverse=True)
+
+    return results[:8]
+
+
+def _split_keywords(text):
+    """从搜索文本中提取关键词：去除常见疑问词后按停用词拆分"""
+    stop = set('什么是怎样如何怎么的了吗呢啊呀为什么因为是否可以')
+    # 先去掉问号
+    for ch in '？?！!，,。. ':
+        text = text.replace(ch, ' ')
+    words = [w for w in text.split() if len(w) >= 2 and w not in stop]
+    if not words:
+        # 中文2-gram回退
+        words = [text[i:i+2] for i in range(0, len(text)-1, 2)]
+    return list(dict.fromkeys(words))  # 去重保序
+
+
+def _search_tutorials(kw, results, seen):
+    """搜索教程并追加到结果列表"""
+    from sqlalchemy import or_
+    # 转义 SQLite 特殊字符
+    safe_kw = kw.replace('%', '\\%').replace('_', '\\_')
     tutorials = Tutorial.query.filter(
         Tutorial.is_published == True,
-        db.or_(
-            Tutorial.title.ilike(f'%{kw}%'),
-            Tutorial.summary.ilike(f'%{kw}%'),
-            Tutorial.content.ilike(f'%{kw}%'),
+        or_(
+            Tutorial.title.ilike('%' + safe_kw + '%'),
+            Tutorial.summary.ilike('%' + safe_kw + '%'),
+            Tutorial.content.ilike('%' + safe_kw + '%'),
         )
     ).limit(8).all()
 
     for t in tutorials:
+        if t.title in seen:
+            continue
+        seen.add(t.title)
         snippet = (t.summary or '')[:120]
-        if kw not in (t.title + snippet).lower():
-            # 从 content 中提取关键词片段
-            idx = (t.content or '').lower().find(kw)
+        if kw.lower() not in (t.title + snippet).lower():
+            idx = (t.content or '').lower().find(kw.lower())
             if idx >= 0:
                 snippet = t.content[max(0, idx - 30):idx + len(kw) + 60].replace('\n', ' ')[:150]
         link = '/tutorial.html?title=' + urllib.parse.quote(t.title)
@@ -454,23 +491,28 @@ def _search_local(keyword):
             'title': t.title,
             'snippet': snippet or t.title,
             'link': link,
+            'score': 10 if kw.lower() in t.title.lower() else 5,
         })
 
-    # 搜索资源
+
+def _search_resources(kw, results, seen):
+    """搜索资源并追加到结果列表"""
+    safe_kw = kw.replace('%', '\\%').replace('_', '\\_')
     resources = Resource.query.filter(
         Resource.is_published == True,
-        db.or_(
-            Resource.name.ilike(f'%{kw}%'),
-            Resource.description.ilike(f'%{kw}%'),
+        (
+            Resource.name.ilike('%' + safe_kw + '%') |
+            Resource.description.ilike('%' + safe_kw + '%')
         )
     ).limit(5).all()
-
     for r in resources:
+        if r.name in seen:
+            continue
+        seen.add(r.name)
         results.append({
             'type': '资源',
             'title': r.name,
             'snippet': (r.description or '')[:120],
             'link': r.link_value if r.link_value and r.link_value != '#' else '/resources.html',
+            'score': 3,
         })
-
-    return results[:8]
