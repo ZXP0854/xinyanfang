@@ -1049,7 +1049,7 @@ function buildSearchIndex() {
             title: meta ? meta.title : node.name,
             desc: meta ? meta.desc : '',
             stage: node.stage,
-            fullText: fullText  // 全文搜索
+            fullText: fullText + ' ' + node.name  // 加入短名称以便搜热搜词
         });
     });
     cachedCards.forEach(function(card) {
