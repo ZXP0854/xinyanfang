@@ -1830,11 +1830,17 @@ function initCodeBlocks(root) {
 
     function isCodeLine(text) {
         if (!text) return false;
-        // Mplus/R/SPSS 代码特征
+        // 纯数字/变量名/标识符续行
+        if (/^[\s]*[\w._\d-]+( [\w._\d-]+)*[\s;]*$/.test(text) && text.length < 120) return true;
+        // Mplus/R/SPSS 关键字开头
         if (/^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|FILE|TYPE|ESTIMATOR|IDVARIABLE|CLUSTER|WITHIN|BETWEEN|AUXILIARY|WEIGHT|STRATIFICATION)\b[ :;]/i.test(text)) return true;
-        if (/^[\s]*[A-Z][A-Z ]{3,}[ :;]/.test(text)) return true;  // 全大写关键字后跟冒号分号
-        if (/[;]$/.test(text) && text.length < 120) return true;     // 分号结尾的短行
-        if (/^\s{2,}[A-Za-z]/.test(text) && text.length < 150) return true;  // 缩进开头的短行
+        // 全大写标识符开头（如 DATA: 或 MODEL:）
+        if (/^[\s]*[A-Z][A-Z ]{2,}[ :;]/.test(text) && text.length < 120) return true;
+        // 分号结尾的短行
+        if (/[;]$/.test(text) && text.length < 120) return true;
+        // 缩进开头 + 短行 = 代码续行
+        if (/^[\s]{2,}[A-Za-z]/.test(text) && text.length < 150) return true;
+        // MODEL/ANALYSIS/OUTPUT 开头（不区分大小写）
         if (/^(MODEL |ANALYSIS |OUTPUT )/i.test(text)) return true;
         return false;
     }
