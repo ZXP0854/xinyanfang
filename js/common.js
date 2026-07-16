@@ -1903,16 +1903,17 @@ function initCodeBlocks(root) {
     }
 
     function isPlainHeading(text) {
-        // 检测中文标题行（如 "1 无条件潜变量线性增长模型"、"变量名说明"）
-        // 不含分号、管道符、赋值等代码语法
-        var hasCjk = /[一-鿿]/.test(text);
-        if (!hasCjk) return false;
-        // 如果有代码语法标记，不是纯标题
+        // 没有任何代码语法标记 + 含中文 → 当作标题/说明文字
+        // 代码语法标记：分号 ; 管道 | @符号 ~ = 赋值
         if (/[;|@~=]/.test(text)) return false;
+        // 强关键字 → 是代码
         if (/^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES|USEVARIABLE|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|TYPE|ESTIMATOR|INPUT)\s*[:;]/i.test(text)) return false;
-        if (/^(BY|ON|WITH|IND)\b/i.test(text)) return false;
-        // 短中文行 = 标题（如 "1 无条件潜变量线性增长模型"、 "3 保存各个被试的截距和斜率值"）
-        return true;
+        // Mplus 模型语法
+        if (/^(BY\b|ON\b|WITH\b|IND\b)/i.test(text)) return false;
+        // 含中文 → 确认为标题/说明
+        if (/[一-鿿]/.test(text)) return true;
+        // 无中文 → 可能是代码段标题，不算
+        return false;
     }
 
     function isCodeLine(text) {
