@@ -157,37 +157,94 @@ def track_event():
 @api_bp.route('/api/search/hot', methods=['GET'])
 @rate_limit(max_requests=30, window_seconds=60)
 def get_hot_search_terms():
-    """获取热搜词（基于实际搜索/教程观看/资源点击统计）"""
+    """获取热搜词（基于实际搜索/教程观看/资源点击统计，补齐到limit个）"""
     from sqlalchemy import func
     from datetime import timedelta
     limit = request.args.get('limit', 8, type=int)
     limit = min(limit, 12)
     since = datetime.utcnow() - timedelta(days=14)
 
-    hot = []
-    # 教程观看热门
-    terms = (
+    hot = {}
+    # 1. 统计教程观看
+    tutorial_hits = (
         db.session.query(
             SiteStat.event_key,
             func.count(SiteStat.id).label('cnt')
         )
         .filter(
-            SiteStat.event_type.in_(['tutorial_view', 'resource_click']),
+            SiteStat.event_type == 'tutorial_view',
             SiteStat.event_key != '',
             SiteStat.created_at >= since
         )
         .group_by(SiteStat.event_key)
-        .order_by(func.count(SiteStat.id).desc())
-        .limit(limit * 2)
         .all()
     )
-    for item in terms:
-        name = item[0]
-        if len(name) > 20: name = name[:20] + '…'
-        hot.append({'term': name, 'count': item[1]})
+    # 2. 统计资源点击
+    resource_hits = (
+        db.session.query(
+            SiteStat.event_key,
+            func.count(SiteStat.id).label('cnt')
+        )
+        .filter(
+            SiteStat.event_type == 'resource_click',
+            SiteStat.event_key != '',
+            SiteStat.created_at >= since
+        )
+        .group_by(SiteStat.event_key)
+        .all()
+    )
+    # 3. 统计页面浏览（排除 path-like keys）
+    page_hits = (
+        db.session.query(
+            SiteStat.event_key,
+            func.count(SiteStat.id).label('cnt')
+        )
+        .filter(
+            SiteStat.event_type == 'page_view',
+            SiteStat.event_key != '',
+            SiteStat.event_key.notlike('/%'),
+            SiteStat.created_at >= since
+        )
+        .group_by(SiteStat.event_key)
+        .all()
+    )
 
-    hot = hot[:limit]
-    return jsonify({'hot': hot}), 200
+    # 合并计数
+    for key, cnt in tutorial_hits + resource_hits + page_hits:
+        if not key: continue
+        hot[key] = hot.get(key, 0) + cnt
+
+    # 解析名称：node_id → 教程标题
+    result = []
+    for key, cnt in sorted(hot.items(), key=lambda x: -x[1]):
+        name = key
+        t = Tutorial.query.filter_by(node_id=key, is_published=True).first()
+        if t:
+            name = t.title
+        r = Resource.query.filter_by(name=key, is_published=True).first()
+        if r:
+            name = r.name
+        if len(name) > 18: name = name[:18] + '…'
+        result.append({'term': name, 'count': cnt})
+        if len(result) >= limit: break
+
+    # 不够补齐：从热门教程标题中取
+    if len(result) < limit:
+        popular = (
+            Tutorial.query
+            .filter(Tutorial.is_published == True)
+            .order_by(Tutorial.sort_order)
+            .limit(limit)
+            .all()
+        )
+        for t in popular:
+            name = t.title
+            if len(name) > 18: name = name[:18] + '…'
+            if not any(r['term'] == name for r in result):
+                result.append({'term': name, 'count': 0})
+                if len(result) >= limit: break
+
+    return jsonify({'hot': result}), 200
 
 
 # ═══════════════════════════════════════════════════════════════
