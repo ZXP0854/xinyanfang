@@ -233,10 +233,10 @@ def get_hot_search_terms():
         term = key.replace('搜索:', '', 1)
         hot[term] = hot.get(term, 0) + cnt
 
-    # 解析名称：node_id → 教程标题（仅返回有真实搜索数据的）
+    # 解析名称：node_id → 教程标题
     result = []
     for key, cnt in sorted(hot.items(), key=lambda x: -x[1]):
-        if cnt <= 0: continue  # 跳过无真实搜索量的
+        if cnt <= 0: continue
         name = key
         t = Tutorial.query.filter_by(node_id=key, is_published=True).first()
         if t:
@@ -244,9 +244,25 @@ def get_hot_search_terms():
         r = Resource.query.filter_by(name=key, is_published=True).first()
         if r:
             name = r.name
-        if len(name) > 18: name = name[:18] + '…'
+        if len(name) > 16: name = name[:16] + '…'
         result.append({'term': name, 'count': cnt})
         if len(result) >= limit: break
+
+    # 补充：从教程中提取能搜出东西的高频关键词作为热搜
+    keyword_pool = [
+        'Zotero', 'SPSS', 'Mplus', 'ChatGPT', '数据清洗', '中介分析',
+        '实验设计', '样本量', '量表', '信效度', '取样', '知情同意',
+        '结构方程模型', '文献综述', '回归分析', '因子分析'
+    ]
+    for kw in keyword_pool:
+        if len(result) >= limit: break
+        if not any(r['term'] == kw for r in result):
+            matched = Tutorial.query.filter(
+                Tutorial.is_published == True,
+                Tutorial.content.ilike(f'%{kw}%')
+            ).count()
+            if matched > 0:
+                result.append({'term': kw, 'count': 0})  # 0 表示"关联教程数"
 
     return jsonify({'hot': result}), 200
 

@@ -1246,7 +1246,13 @@ function loadHotSearchTerms() {
             updateHotTermsDOM();
         })
         .catch(function() {
-            cachedHotTerms = [];
+            // 兜底：使用能搜出结果的关键词作为热搜
+            cachedHotTerms = [
+                {term: '数据清洗', count: 0}, {term: 'SPSS', count: 0},
+                {term: 'Mplus', count: 0}, {term: '中介分析', count: 0},
+                {term: '实验设计', count: 0}, {term: '量表', count: 0},
+                {term: '样本量', count: 0}, {term: '文献综述', count: 0}
+            ];
             updateHotTermsDOM();
         });
 }
@@ -1255,7 +1261,7 @@ function updateHotTermsDOM() {
     var list = document.getElementById('searchHotList');
     var col = list ? list.closest('.search-col') : null;
     if (!list) return;
-    var terms = (cachedHotTerms || []).filter(function(t) { return t.count > 0; });
+    var terms = cachedHotTerms || [];
     if (!terms.length) {
         if (col) col.style.display = 'none';
         list.innerHTML = '';
@@ -1263,10 +1269,10 @@ function updateHotTermsDOM() {
     }
     if (col) col.style.display = '';
     list.innerHTML = terms.map(function(t, i) {
+        var cntHtml = t.count > 0 ? '<span class=\"hot-count\">' + t.count + '</span>' : '';
         return '<button type=\"button\" class=\"search-hot-term\" data-term=\"' + t.term + '\">' +
             '<span class=\"hot-rank\">' + (i + 1) + '</span>' +
-            '<span class=\"hot-text\">' + t.term + '</span>' +
-            '<span class=\"hot-count\">' + t.count + '</span>' +
+            '<span class=\"hot-text\">' + t.term + '</span>' + cntHtml +
             '</button>';
     }).join('');
 
@@ -1287,12 +1293,12 @@ function updateHotTermsDOM() {
 function initSearchOverlay() {
     if (document.getElementById('searchOverlay')) return;
 
-    // 推荐搜索词池（每次随机展示8个）
-    var recPool = ['Zotero文献管理', 'SPSS数据清洗', 'Mplus语句', '样本量规划',
-                   '中介分析', '量表选择', '实验设计', '知情同意书',
-                   '文献综述', '共同方法偏差', '模型分析方法', '变量关系梳理',
-                   '数据呈现方式', '研究前沿选题', '取样方法', '伦理规范',
-                   '信效度检验', '效度检验', '调节效应', '交叉滞后模型'];
+    // 推荐搜索词池（每次随机展示8个，均为真实可搜出结果的关键词）
+    var recPool = ['SPSS', 'Mplus', 'Zotero', 'ChatGPT',
+                   '数据清洗', '中介分析', '实验设计', '样本量',
+                   '量表', '因子分析', '回归分析', '文献综述',
+                   '结构方程模型', '信效度', '取样方法', '知情同意',
+                   '共同方法偏差', 'BCH分析', '交叉滞后模型', '潜类别'];
     // 随机选取8个
     var shuffled = recPool.sort(function() { return Math.random() - 0.5; });
     var recs = shuffled.slice(0, 8);
