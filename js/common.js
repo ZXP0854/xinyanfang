@@ -1834,8 +1834,9 @@ function initCodeBlocks(root) {
             } else if (inCodeBlock && (isCodeLike || isMplusComment)) {
                 // 在代码块内，继续
                 currentGroup.push(p);
-            } else if (inCodeBlock && !isCodeLike && !isMplusComment && text.replace(/\s/g,'').length < 150) {
+            } else if (inCodeBlock && !isCodeLike && !isMplusComment && text.replace(/\s/g,'').length < 150 && !isPlainHeading(text)) {
                 // 代码块内，短行可能仍是代码（如模型语句 i with s;）
+                // 但排除纯中文标题行
                 currentGroup.push(p);
             } else if (inCodeBlock) {
                 // 碰到长文本/中文 → 结束代码块
@@ -1899,6 +1900,19 @@ function initCodeBlocks(root) {
         // 通用
         if (/;/i.test(codeText.substring(0, 100))) return '统计代码';
         return '代码';
+    }
+
+    function isPlainHeading(text) {
+        // 检测中文标题行（如 "1 无条件潜变量线性增长模型"、"变量名说明"）
+        // 不含分号、管道符、赋值等代码语法
+        var hasCjk = /[一-鿿]/.test(text);
+        if (!hasCjk) return false;
+        // 如果有代码语法标记，不是纯标题
+        if (/[;|@~=]/.test(text)) return false;
+        if (/^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES|USEVARIABLE|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|TYPE|ESTIMATOR|INPUT)\s*[:;]/i.test(text)) return false;
+        if (/^(BY|ON|WITH|IND)\b/i.test(text)) return false;
+        // 短中文行 = 标题（如 "1 无条件潜变量线性增长模型"、 "3 保存各个被试的截距和斜率值"）
+        return true;
     }
 
     function isCodeLine(text) {
