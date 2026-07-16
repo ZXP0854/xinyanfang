@@ -1781,118 +1781,159 @@ function initPromptCopyTracking() {
 }
 
 // ─── 代码块 + 复制按钮 ───
-// ─── Mplus 代码块关键词 ───
-var MPLUS_KW = /^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES?|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|INPUT)\s*([:;]|ARE|IS)\b/i;
-
 function initCodeBlocks(root) {
     root = root || document;
 
-    // 1. 处理 <pre> 标签
-    var pres = root.querySelectorAll("pre");
+    // 1. 处理现有 <pre> 标签
+    var pres = root.querySelectorAll('pre');
     pres.forEach(function(pre) {
-        if (pre.closest(".code-block")) return;
-        wrapCodeBlock(pre, mplusLabel(pre.textContent || ""));
+        if (pre.closest('.code-block')) return;
+        var codeText = (pre.textContent || '').trim();
+        wrapCodeBlock(pre, detectCodeLabel(codeText));
     });
 
-    // 2. 自动检测 Mplus <p> 标签代码
-    var areas = [];
-    root.querySelectorAll("#article-body, .workflow-section-html").forEach(function(a) { areas.push(a); });
-    // root 自身也可能是目标区域（如 tutorial.html 传入 #article-body）
-    if (root !== document && (root.id === "article-body" || root.classList.contains("workflow-section-html"))) {
-        areas.push(root);
+    // 2. 检测代码内容（仅在实际教程区域）
+    var tutorialContentAreas = [];
+    root.querySelectorAll('#article-body, .workflow-section-html').forEach(function(a) { tutorialContentAreas.push(a); });
+    // root 自身也可能是目标（tutorial.html 传入 #article-body 自身）
+    if (root !== document && (root.id === 'article-body' || root.classList.contains('workflow-section-html'))) {
+        tutorialContentAreas.push(root);
     }
-    areas.forEach(function(area) {
-        var allP = area.querySelectorAll("p");
-        var groups = [], cur = [], inBlock = false;
+    tutorialContentAreas.forEach(function(area) { wrapPCodeInArea(area); });
+
+    function wrapPCodeInArea(container) {
+        // 递归获取区域内所有 <p>（代码嵌套在 tutorial-rich > rich-text 等 div 中）
+        var allP = container.querySelectorAll('p');
+        var codeGroups = [];
+        var currentGroup = [];
+        var inCode = false;
 
         allP.forEach(function(p) {
-            if (p.closest(".code-block") || p.closest("table") || p.closest("td")) return;
-            var text = (p.textContent || "").trim();
-            if (!text) { if (inBlock && cur.length) cur.push(p); return; }
+            if (p.closest('.code-block') || p.closest('table') || p.closest('td') || p.closest('.workflow-section-copy')) return;
 
-            if (MPLUS_KW.test(text)) {
-                if (!inBlock) { if (cur.length) groups.push(cur); cur = []; inBlock = true; }
-                cur.push(p);
+            var text = (p.textContent || '').trim();
+            if (!text) {
+                if (inCode && currentGroup.length) currentGroup.push(p);
                 return;
             }
-            if (inBlock) {
-                // 中文标题 → 结束
-                var hasCN = /[一-鿿]/.test(text);
-                var isMplus = /[;!@|]/.test(text) || /^(BY|ON|WITH|IND|MODEL CONSTRAINT|SAVE)\b/i.test(text) || /%=/.test(text);
-                if (hasCN && text.length > 6 && !isMplus) { groups.push(cur); cur = []; inBlock = false; return; }
-                cur.push(p);
+
+            // Mplus 关键字触发：支持冒号分号或 ARE 语法（如 NAMES ARE, USEVARIABLES ARE）
+            if (/^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES?|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|INPUT|MODEL CONSTRAINT|MODEL INDIRECT)\s*([:;]|\bARE\b|\bIS\b)/i.test(text)) {
+                if (!inCode) {
+                    if (currentGroup.length) codeGroups.push(currentGroup);
+                    currentGroup = [];
+                    inCode = true;
+                }
+                currentGroup.push(p);
+                return;
+            }
+
+            if (inCode) {
+                // 中文段落标题 → 结束代码块
+                if (/[一-鿿]/.test(text) && text.length > 6 && !/[;@|!]/.test(text) && !/^(BY|ON|WITH|IND|MODEL CONSTRAINT)\b/i.test(text)) {
+                    codeGroups.push(currentGroup);
+                    currentGroup = [];
+                    inCode = false;
+                    return;
+                }
+                // 代码块内继续
+                currentGroup.push(p);
             }
         });
-        if (cur.length) groups.push(cur);
+        if (currentGroup.length) codeGroups.push(currentGroup);
 
-        groups.forEach(function(g) {
-            if (g.length < 2) return;
-            var ct = g.map(function(p) {
+        codeGroups.forEach(function(group) {
+            if (group.length < 2) return;
+            var codeText = group.map(function(p) {
                 var t = p.innerHTML;
-                t = t.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "");
+                t = t.replace(/<br\s*\/?>/gi, '\n');
+                t = t.replace(/<[^>]+>/g, '');
                 return t;
-            }).join("\n");
-            if (!MPLUS_KW.test(ct)) return;
-            var pre = document.createElement("pre");
-            pre.innerHTML = "<code>" + escapeHtml(ct) + "</code>";
-            g[0].parentNode.insertBefore(pre, g[0]);
-            g.forEach(function(p) { p.parentNode.removeChild(p); });
-            wrapCodeBlock(pre, mplusLabel(ct));
+            }).join('\n');
+            // 最终验证：必须含 Mplus/R/SPSS 特征关键字
+            if (!/(TITLE|DATA|VARIABLE|NAMES|MODEL|ANALYSIS|OUTPUT|SAVEDATA|MISSING|USEVARIABLES?|CLASSES|library\(|ggplot|REGRESSION|FREQUENCIES)/i.test(codeText)) return;
+            var pre = document.createElement('pre');
+            pre.innerHTML = '<code>' + escapeHtml(codeText) + '</code>';
+            group[0].parentNode.insertBefore(pre, group[0]);
+            group.forEach(function(p) { p.parentNode.removeChild(p); });
+            wrapCodeBlock(pre, detectCodeLabel(codeText));
         });
-    });
-}
+    }
 
-function mplusLabel(ct) {
-    var lines = ct.split("\n").filter(function(l) { return l.trim(); });
-    var first = (lines[0] || "").trim();
-    if (/^TITLE\s*:/i.test(first)) return "Mplus语法 — " + first.replace(/^TITLE\s*:\s*/i, "");
-    var m = first.match(/^(\w+)/);
-    if (m && /^(DATA|VARIABLE|ANALYSIS|MODEL|OUTPUT|SAVEDATA|NAMES|MISSING|USEVARIABLES?)/i.test(m[1])) return "Mplus语法 — " + m[1] + " 段";
-    return "Mplus语法";
-}
+    function detectCodeLabel(codeText) {
+        var lines = codeText.split('\n').filter(function(l) { return l.trim(); });
+        if (!lines.length) return '代码';
+        var first = lines[0].trim();
+        if (/^TITLE\s*:/i.test(first)) return 'Mplus语法 — ' + first.replace(/^TITLE\s*:\s*/i, '');
+        if (/^DATA\s*:/i.test(first)) return 'Mplus语法';
+        if (/^\w+:/i.test(first) && /^(VARIABLE|ANALYSIS|MODEL|OUTPUT|SAVEDATA|NAMES|MISSING|USEVARIABLES)/i.test(first)) {
+            return 'Mplus语法 — ' + first.match(/^(\w+)/)[0] + ' 段';
+        }
+        if (/\b(library|install\.packages|ggplot|dplyr|lavaan|lmer|lme4)\b/i.test(codeText)) return 'R语言代码';
+        if (/\b(REGRESSION|FREQUENCIES|T-TEST|ANOVA|FACTOR|RELIABILITY)\b/i.test(codeText)) return 'SPSS语法';
+        return '代码';
+    }
 
-function wrapCodeBlock(codeEl, labelText) {
-    var wrapper = document.createElement("div");
-    wrapper.className = "code-block";
-    var header = document.createElement("div");
-    header.className = "code-block__header";
-    var label = document.createElement("span");
-    label.className = "code-block__label";
-    labelText = labelText || "代码";
-    label.innerHTML = "<i class=\"fa-solid fa-code\"></i> " + escapeHtml(labelText);
-    var copyBtn = document.createElement("button");
-    copyBtn.className = "code-block__copy";
-    copyBtn.type = "button";
-    copyBtn.innerHTML = "<i class=\"fa-solid fa-copy\"></i> 复制";
-    copyBtn.addEventListener("click", function() {
-        var el = wrapper.querySelector("code") || wrapper.querySelector("pre");
-        var t = (el ? el.textContent : "").trim();
-        if (!t) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(t).then(function() { copied(copyBtn); }).catch(function() { fallback(t, copyBtn); });
-        } else { fallback(t, copyBtn); }
-    });
-    header.appendChild(label);
-    header.appendChild(copyBtn);
-    wrapper.appendChild(header);
-    codeEl.parentNode.insertBefore(wrapper, codeEl);
-    wrapper.appendChild(codeEl);
-}
+    function wrapCodeBlock(codeEl, labelText) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'code-block';
 
-function copied(btn) {
-    btn.classList.add("copied");
-    btn.innerHTML = "<i class=\"fa-solid fa-check\"></i> 已复制";
-    setTimeout(function() { btn.classList.remove("copied"); btn.innerHTML = "<i class=\"fa-solid fa-copy\"></i> 复制"; }, 2000);
-}
+        var header = document.createElement('div');
+        header.className = 'code-block__header';
 
-function fallback(t, btn) {
-    var ta = document.createElement("textarea");
-    ta.value = t; ta.style.cssText = "position:fixed;left:-9999px";
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand("copy"); copied(btn); } catch(e) {}
-    document.body.removeChild(ta);
-}
+        var label = document.createElement('span');
+        label.className = 'code-block__label';
+        labelText = labelText || '代码';
+        label.innerHTML = '<i class="fa-solid fa-code"></i> ' + escapeHtml(labelText);
 
-function escapeHtml(s) {
-    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        var copyBtn = document.createElement('button');
+        copyBtn.className = 'code-block__copy';
+        copyBtn.type = 'button';
+        copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+        copyBtn.addEventListener('click', function() {
+            var codeEl2 = wrapper.querySelector('code') || wrapper.querySelector('pre');
+            var text = (codeEl2 ? codeEl2.textContent : '').trim();
+            if (!text) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    setCopied(copyBtn);
+                }).catch(function() {
+                    fallbackCopy(text, copyBtn);
+                });
+            } else {
+                fallbackCopy(text, copyBtn);
+            }
+        });
+
+        header.appendChild(label);
+        header.appendChild(copyBtn);
+        wrapper.appendChild(header);
+        codeEl.parentNode.insertBefore(wrapper, codeEl);
+        wrapper.appendChild(codeEl);
+    }
+
+    function setCopied(btn) {
+        btn.classList.add('copied');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+        setTimeout(function() {
+            btn.classList.remove('copied');
+            btn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+        }, 2000);
+    }
+
+    function fallbackCopy(text, btn) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); setCopied(btn); } catch(e) {}
+        document.body.removeChild(ta);
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
 }
