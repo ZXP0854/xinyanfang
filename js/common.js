@@ -1812,8 +1812,10 @@ function initCodeBlocks(root) {
                 return;
             }
 
-            // Mplus 关键字触发：支持冒号分号或 ARE 语法（如 NAMES ARE, USEVARIABLES ARE）
-            if (/^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES?|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|INPUT|MODEL CONSTRAINT|MODEL INDIRECT)\s*([:;]|\bARE\b|\bIS\b)/i.test(text)) {
+            // Mplus 关键字 + R 代码模式触发
+            var isMplus = /^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES?|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|INPUT|MODEL CONSTRAINT|MODEL INDIRECT)\s*([:;]|\bARE\b|\bIS\b)/i.test(text);
+            var isRCode = /\b(library|install\.packages|require)\s*\(/i.test(text) || /^[#]\s*=+/.test(text) || /^\w+\s*<-\s*function\s*\(/i.test(text);
+            if (isMplus || isRCode) {
                 if (!inCode) {
                     if (currentGroup.length) codeGroups.push(currentGroup);
                     currentGroup = [];
@@ -1824,8 +1826,9 @@ function initCodeBlocks(root) {
             }
 
             if (inCode) {
-                // 中文段落标题 → 结束代码块
-                if (/[一-鿿]/.test(text) && text.length > 6 && !/[;@|!]/.test(text) && !/^(BY|ON|WITH|IND|MODEL CONSTRAINT)\b/i.test(text)) {
+                // 中文段落标题 → 结束代码块（但跳过 R 注释行和代码语法行）
+                var isRComment = /^[#]\s/.test(text);
+                if (/[一-鿿]/.test(text) && text.length > 6 && !/[;@|!]/.test(text) && !isRComment && !/^(BY|ON|WITH|IND|MODEL CONSTRAINT|library|install\.packages|require|if\s*\(|for\s*\()\b/i.test(text) && !/<-/.test(text)) {
                     codeGroups.push(currentGroup);
                     currentGroup = [];
                     inCode = false;
@@ -1843,6 +1846,8 @@ function initCodeBlocks(root) {
                 var t = p.innerHTML;
                 t = t.replace(/<br\s*\/?>/gi, '\n');
                 t = t.replace(/<[^>]+>/g, '');
+                // 解码 HTML 实体（&quot; &lt; &gt; &amp; &#39; 等）
+                t = t.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, \"'\").replace(/&apos;/g, \"'\");
                 return t;
             }).join('\n');
             // 最终验证：必须含 Mplus/R/SPSS 特征关键字
@@ -1856,6 +1861,8 @@ function initCodeBlocks(root) {
     }
 
     function detectCodeLabel(codeText) {
+        if (/\b(library|install\.packages|ggplot|dplyr|lavaan|lmer|lme4|require|readModels)\b/i.test(codeText)) return 'R语言代码';
+        if (/\b(REGRESSION|FREQUENCIES|T-TEST|ANOVA|FACTOR|RELIABILITY)\b/i.test(codeText)) return 'SPSS语法';
         var lines = codeText.split('\n').filter(function(l) { return l.trim(); });
         if (!lines.length) return '代码';
         var first = lines[0].trim();
@@ -1864,8 +1871,6 @@ function initCodeBlocks(root) {
         if (/^\w+:/i.test(first) && /^(VARIABLE|ANALYSIS|MODEL|OUTPUT|SAVEDATA|NAMES|MISSING|USEVARIABLES)/i.test(first)) {
             return 'Mplus语法 — ' + first.match(/^(\w+)/)[0] + ' 段';
         }
-        if (/\b(library|install\.packages|ggplot|dplyr|lavaan|lmer|lme4)\b/i.test(codeText)) return 'R语言代码';
-        if (/\b(REGRESSION|FREQUENCIES|T-TEST|ANOVA|FACTOR|RELIABILITY)\b/i.test(codeText)) return 'SPSS语法';
         return '代码';
     }
 
