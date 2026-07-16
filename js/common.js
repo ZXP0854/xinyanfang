@@ -1230,9 +1230,15 @@ function updateHotTermsDOM() {
 function initSearchOverlay() {
     if (document.getElementById('searchOverlay')) return;
 
-    // 推荐搜索词
-    var recs = ['Zotero文献管理', 'SPSS数据清洗', 'Mplus语句', '样本量规划',
-                '中介分析', '量表选择', '实验设计', '知情同意书'];
+    // 推荐搜索词池（每次随机展示8个）
+    var recPool = ['Zotero文献管理', 'SPSS数据清洗', 'Mplus语句', '样本量规划',
+                   '中介分析', '量表选择', '实验设计', '知情同意书',
+                   '文献综述', '共同方法偏差', '模型分析方法', '变量关系梳理',
+                   '数据呈现方式', '研究前沿选题', '取样方法', '伦理规范',
+                   '信效度检验', '效度检验', '调节效应', '交叉滞后模型'];
+    // 随机选取8个
+    var shuffled = recPool.sort(function() { return Math.random() - 0.5; });
+    var recs = shuffled.slice(0, 8);
 
     var overlay = document.createElement('div');
     overlay.id = 'searchOverlay';

@@ -214,9 +214,10 @@ def get_hot_search_terms():
         if not key: continue
         hot[key] = hot.get(key, 0) + cnt
 
-    # 解析名称：node_id → 教程标题
+    # 解析名称：node_id → 教程标题（仅返回有真实搜索数据的）
     result = []
     for key, cnt in sorted(hot.items(), key=lambda x: -x[1]):
+        if cnt <= 0: continue  # 跳过无真实搜索量的
         name = key
         t = Tutorial.query.filter_by(node_id=key, is_published=True).first()
         if t:
@@ -227,22 +228,6 @@ def get_hot_search_terms():
         if len(name) > 18: name = name[:18] + '…'
         result.append({'term': name, 'count': cnt})
         if len(result) >= limit: break
-
-    # 不够补齐：从热门教程标题中取
-    if len(result) < limit:
-        popular = (
-            Tutorial.query
-            .filter(Tutorial.is_published == True)
-            .order_by(Tutorial.sort_order)
-            .limit(limit)
-            .all()
-        )
-        for t in popular:
-            name = t.title
-            if len(name) > 18: name = name[:18] + '…'
-            if not any(r['term'] == name for r in result):
-                result.append({'term': name, 'count': 0})
-                if len(result) >= limit: break
 
     return jsonify({'hot': result}), 200
 
