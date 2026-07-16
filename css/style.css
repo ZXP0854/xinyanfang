@@ -1348,9 +1348,15 @@ body {
 .masonry-card .masonry-img img[src] {
     opacity: 1;
 }
-.masonry-card .masonry-body { padding: 1rem 1.1rem; }
+.masonry-card .masonry-body { padding: 0.8rem 1.1rem 1rem; }
 .masonry-card .masonry-body h4 { font-size: 0.95rem; font-weight: 600; color: var(--primary); margin-bottom: 0.3rem; }
-.masonry-card .masonry-body p { font-size: 0.8rem; color: var(--body); line-height: 1.5; }
+.masonry-card .masonry-body .card-benefit {
+    font-size: 0.78rem;
+    color: #8c7a6b;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+    display: block;
+}
 .masonry-card .masonry-body .tag {
     display: inline-block;
     font-size: 0.7rem;

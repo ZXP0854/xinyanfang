@@ -1649,6 +1649,28 @@ function loadAestheticCards() {
     const masonry = document.querySelector('.masonry');
     if (!masonry) return;
 
+    // 卡片利好文案（通俗解释，利于新手理解）
+    var CARD_BENEFITS = {
+        'BCH分析': '看懂一篇潜类别论文如何报告三步法结果',
+        '多层次结构方程模型': '搞懂嵌套数据怎么分析，审稿人眼中的方法升级',
+        '带交互项的潜增长模型': '学会检验谁的变化更快、受什么影响',
+        '单项+联合潜类别增长模型': '一个模型同时追踪两类心理特质的变化趋势',
+        '交叉滞后模型': '搞懂变量间谁先谁后，让因果推断更有说服力',
+        '《心理科学进展》期刊分析': '拆解顶刊的文章结构，学会怎么写才能发',
+        '重点中文期刊标题、摘要、关键词分析': '学会写出抓人眼球的标题和摘要',
+        '重点中文期刊方法结果分析': '看懂顶刊如何规范报告方法和结果',
+        '重点中文期刊基础信息分析': '从期刊基础信息快速判断投稿方向',
+        '重点中文期刊讨论分析': '模仿顶刊的讨论写法，让审稿人无话可说',
+        '重点中文期刊引言分析': '模仿顶刊引言范式，开题报告不再无从下笔',
+        '交叉滞后+平行潜变量增长的引言及讨论写作思路（文献）': '有文献支撑的引言讨论写作，论文更扎实',
+        '交叉滞后+平行潜变量增长的引言及讨论写作思路': '引言和讨论不再空洞，有现成模板可套',
+        '心理学报审稿意见回复': '学会优雅回应审稿人，提高修改后录用率',
+        '英文核心论文选题及期刊选择': '选对期刊是发表的一半，精准匹配投稿目标',
+        '英文核心期刊及发表流程介绍': '搞懂英文期刊从投稿到接收的全流程',
+        '撰写英文文献综述': '掌握英文综述规范写法，为SSCI之路铺路',
+        '英文论文摘要语料素材库': '直接套用英文摘要模板，写作不再从空白页开始'
+    };
+
     fetch('/api/cards')
         .then(res => res.json())
         .then(data => {
@@ -1664,9 +1686,9 @@ function loadAestheticCards() {
                 el.className = 'masonry-card';
                 el.setAttribute('data-category', card.category || '');
 
-                const h = card.height || 220;
+                const h = (card.height || 200) - 10;
                 const iconHtml = '<i class="' + (card.icon || 'fa-solid fa-file') + '"></i>';
-                const iconDiv = '<div class="masonry-img" style="height:' + h + 'px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:rgba(255,255,255,0.7)">' + iconHtml + '</div>';
+                const iconDiv = '<div class="masonry-img" style="height:' + h + 'px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:rgba(255,255,255,0.7)">' + iconHtml + '</div>';
 
                 var imgDiv;
                 if (card.image_url) {
@@ -1679,8 +1701,11 @@ function loadAestheticCards() {
                     ? 'openTutorial(\'' + card.tutorial_title.replace(/'/g, "\\'") + '\');return false'
                     : '');
 
+                var benefit = CARD_BENEFITS[card.title] || '';
+                var benefitHtml = benefit ? '<p class="card-benefit">' + benefit + '</p>' : '';
+
                 el.innerHTML = imgDiv +
-                    '<div class="masonry-body"><h4>' + card.title + '</h4><p>' + card.description + '</p><span class="tag">' + (card.tag || '') + '</span></div>';
+                    '<div class="masonry-body"><h4>' + card.title + '</h4>' + benefitHtml + '<span class="tag">' + (card.tag || '') + '</span></div>';
                 masonry.appendChild(el);
             });
             setTimeout(() => { initMasonryReveal(); initAestheticFilter(); }, 50);
