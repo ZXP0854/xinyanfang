@@ -1030,147 +1030,117 @@ function openTutorial(topicName) {
 // ─── 搜索功能 ───
 var cachedCards = [];
 var cachedResources = {};
+var cachedHotTerms = [];
 
 function buildSearchIndex() {
     var items = [];
-    // 1. 科研流程教程
     treeData.forEach(function(node) {
         var meta = tutorialMeta[node.id];
         items.push({
-            type: 'workflow',
-            id: node.id,
+            type: 'workflow', id: node.id,
             title: meta ? meta.title : node.name,
-            desc: meta ? meta.desc : '',
-            stage: node.stage
+            desc: meta ? meta.desc : '', stage: node.stage
         });
     });
-    // 2. 审美卡片
     cachedCards.forEach(function(card) {
         items.push({
             type: 'card',
-            title: card.title || '',
-            desc: card.description || '',
-            tag: card.tag || card.category || '',
-            category: card.category || '',
-            tutorialTitle: card.tutorial_title || '',
-            icon: card.icon || 'fa-solid fa-file'
+            title: card.title || '', desc: card.description || '',
+            tag: card.tag || card.category || '', category: card.category || '',
+            tutorialTitle: card.tutorial_title || '', icon: card.icon || 'fa-solid fa-file'
         });
     });
-    // 3. 科研资源
     for (var module in cachedResources) {
-        if (cachedResources.hasOwnProperty(module)) {
-            cachedResources[module].forEach(function(item) {
-                items.push({
-                    type: 'resource',
-                    title: item.name || '',
-                    desc: item.description || '',
-                    module: module,
-                    url: item.link_value || '#'
-                });
+        if (!cachedResources.hasOwnProperty(module)) continue;
+        cachedResources[module].forEach(function(item) {
+            items.push({
+                type: 'resource', title: item.name || '',
+                desc: item.description || '', module: module,
+                url: item.link_value || '#'
             });
-        }
+        });
     }
     return items;
 }
 
 function matchScore(item, keyword) {
-    var lowerKeyword = keyword.toLowerCase();
-    var score = 0;
-    var title = (item.title || '').toLowerCase();
-    var desc = (item.desc || '').toLowerCase();
+    var kw = keyword.toLowerCase();
+    var t = (item.title || '').toLowerCase();
+    var d = (item.desc || '').toLowerCase();
     var tag = (item.tag || '').toLowerCase();
-    var module = (item.module || '').toLowerCase();
-    if (title === lowerKeyword) score += 100;
-    else if (title.indexOf(lowerKeyword) === 0) score += 70;
-    else if (title.indexOf(lowerKeyword) !== -1) score += 50;
-    if (desc.indexOf(lowerKeyword) !== -1) score += 20;
-    if (tag.indexOf(lowerKeyword) !== -1) score += 15;
-    if (module.indexOf(lowerKeyword) !== -1) score += 10;
-    if (item.type === 'workflow') score += 5;
-    return score;
+    var mod = (item.module || '').toLowerCase();
+    if (t === kw) return 100;
+    if (t.indexOf(kw) === 0) return 70;
+    if (t.indexOf(kw) !== -1) return 50;
+    if (d.indexOf(kw) !== -1) return 20;
+    if (tag.indexOf(kw) !== -1) return 15;
+    if (mod.indexOf(kw) !== -1) return 10;
+    if (item.type === 'workflow') return 5;
+    return 0;
 }
 
 function performSearch() {
-    var keyword = document.getElementById('searchInput').value.trim();
-    var dropdown = document.getElementById('searchDropdown');
-    closeSearchHotPanel();
-    if (!dropdown) {
-        // 创建下拉容器
-        dropdown = document.createElement('div');
-        dropdown.id = 'searchDropdown';
-        dropdown.className = 'search-dropdown';
-        var searchContainer = document.querySelector('.search-container');
-        if (searchContainer) searchContainer.appendChild(dropdown);
-    }
+    var input = document.getElementById('searchInput');
+    var overlay = document.getElementById('searchOverlay');
+    var results = document.getElementById('searchResults');
+    if (!input || !overlay || !results) return;
+    var keyword = input.value.trim();
 
     if (!keyword) {
-        dropdown.classList.remove('visible');
+        results.innerHTML = '';
+        results.classList.remove('has-results');
         return;
     }
 
     var items = buildSearchIndex();
-    var results = [];
+    var scored = [];
     items.forEach(function(item) {
-        var score = matchScore(item, keyword);
-        if (score > 0) {
-            item._score = score;
-            results.push(item);
-        }
+        var s = matchScore(item, keyword);
+        if (s > 0) { item._score = s; scored.push(item); }
     });
-    results.sort(function(a, b) { return b._score - a._score; });
-    results = results.slice(0, 12);
+    scored.sort(function(a, b) { return b._score - a._score; });
+    scored = scored.slice(0, 12);
 
-    if (results.length === 0) {
-        dropdown.innerHTML = '<div class="search-empty">未找到相关结果，请尝试其他关键词</div>';
+    if (!scored.length) {
+        results.innerHTML = '<div class="search-empty">未找到相关结果，请尝试其他关键词</div>';
     } else {
         var groups = { workflow: [], card: [], resource: [] };
-        results.forEach(function(r) { groups[r.type].push(r); });
-        var groupLabels = { workflow: '科研流程教程', card: '科研审美', resource: '科研资源' };
+        scored.forEach(function(r) { groups[r.type].push(r); });
+        var labels = { workflow: '科研流程教程', card: '科研审美', resource: '科研资源' };
         var html = '';
         for (var type in groups) {
-            if (groups[type].length === 0) continue;
-            html += '<div class="search-dropdown-group">' + groupLabels[type] + '</div>';
+            if (!groups[type].length) continue;
+            html += '<div class="search-dropdown-group">' + labels[type] + '</div>';
             groups[type].forEach(function(r) {
-                var icon, tagHtml = '';
-                if (r.type === 'workflow') {
-                    icon = 'fa-solid fa-diagram-project';
-                    tagHtml = '<span class="sr-tag">第' + r.stage + '阶段</span>';
-                } else if (r.type === 'card') {
-                    icon = r.icon;
-                    tagHtml = r.tag ? '<span class="sr-tag">' + r.tag + '</span>' : '';
-                } else {
-                    icon = 'fa-solid fa-link';
-                    tagHtml = r.module ? '<span class="sr-tag">' + r.module + '</span>' : '';
-                }
-                var clickHandler;
-                var esc = function(s) { return s.replace(/'/g, "\\'"); };
-                if (r.type === 'workflow') {
-                    clickHandler = "onclick=\"window.location.href='workflow.html?node=" + encodeURIComponent(r.id) + "'\"";
-                } else if (r.type === 'card') {
-                    if (r.tutorialTitle) {
-                        clickHandler = "onclick=\"openTutorial('" + esc(r.tutorialTitle) + "')\"";
-                    } else {
-                        clickHandler = "onclick=\"window.location.href='aesthetics.html'\"";
-                    }
-                } else {
-                    if (r.url && r.url !== '#') {
-                        clickHandler = "onclick=\"var m=document.getElementById('resource-modal');if(m){showResourceModal('" + esc(r.title) + "','" + esc(r.url) + "')}else{window.open('" + esc(r.url) + "','_blank')}\"";
-                    } else {
-                        clickHandler = "onclick=\"window.location.href='resources.html'\"";
-                    }
-                }
-                html += '<div class="search-result-item" ' + clickHandler + '>' +
-                    '<div class="sr-icon"><i class="' + icon + '"></i></div>' +
-                    '<div class="sr-body">' +
-                        '<div class="sr-title">' + highlightMatch(r.title, keyword) + '</div>' +
-                        '<div class="sr-desc">' + (r.desc || '') + '</div>' +
-                    '</div>' + tagHtml +
-                '</div>';
+                var icon = r.type === 'workflow' ? 'fa-diagram-project' : r.type === 'card' ? (r.icon || 'fa-file') : 'fa-link';
+                var tag = r.type === 'workflow' ? '第' + r.stage + '阶段' : r.tag || r.module || '';
+                var label = r.type === 'workflow' ? 'flow' : r.type === 'card' ? 'aes' : 'res';
+                html += '<div class="search-result-item" data-type="' + label + '" data-target="' +
+                    (r.type === 'workflow' ? r.id : r.type === 'card' ? (r.tutorialTitle || '') : (r.url || '')) + '">' +
+                    '<div class="sr-icon"><i class="fa-solid fa-' + icon + '"></i></div>' +
+                    '<div class="sr-body"><div class="sr-title">' + highlightMatch(r.title, keyword) + '</div>' +
+                    '<div class="sr-desc">' + (r.desc || '') + '</div></div>' +
+                    (tag ? '<span class="sr-tag">' + tag + '</span>' : '') + '</div>';
             });
         }
-        dropdown.innerHTML = html;
+        results.innerHTML = html;
+
+        // bind click events (avoid inline onclick with long desc)
+        results.querySelectorAll('.search-result-item').forEach(function(el) {
+            el.addEventListener('click', function() {
+                var type = el.getAttribute('data-type');
+                var target = el.getAttribute('data-target');
+                if (type === 'flow') window.location.href = 'workflow.html?node=' + encodeURIComponent(target);
+                else if (type === 'aes' && target) openTutorial(target);
+                else if (type === 'aes') window.location.href = 'aesthetics.html';
+                else if (type === 'res' && target && target !== '#') {
+                    showResourceModal(el.querySelector('.sr-title').textContent, target);
+                } else window.location.href = 'resources.html';
+                closeSearchOverlay();
+            });
+        });
     }
-    dropdown.classList.add('visible');
+    results.classList.add('has-results');
 }
 
 function highlightMatch(text, keyword) {
@@ -1182,98 +1152,216 @@ function highlightMatch(text, keyword) {
     }).join('');
 }
 
-function closeSearchResults() {
-    var dropdown = document.getElementById('searchDropdown');
-    if (dropdown) dropdown.classList.remove('visible');
+function openSearchOverlay() {
+    var overlay = document.getElementById('searchOverlay');
+    if (!overlay) return;
+    overlay.classList.add('visible');
+    document.body.classList.add('search-open');
+    setTimeout(function() {
+        var input = document.getElementById('searchInput');
+        if (input) input.focus();
+    }, 100);
 }
 
-function closeSearchHotPanel() {
-    var panel = document.getElementById('searchHotPanel');
-    if (panel) panel.classList.remove('visible');
-}
-
-function openSearchHotPanel() {
-    var panel = document.getElementById('searchHotPanel');
+function closeSearchOverlay() {
+    var overlay = document.getElementById('searchOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('visible');
+    document.body.classList.remove('search-open');
     var input = document.getElementById('searchInput');
-    var results = document.getElementById('searchDropdown');
-    if (!panel || !input) return;
-    if (input.value.trim()) return;
-    if (results && results.classList.contains('visible')) return;
-    panel.classList.add('visible');
+    var results = document.getElementById('searchResults');
+    if (input) input.value = '';
+    if (results) { results.innerHTML = ''; results.classList.remove('has-results'); }
 }
 
-function initSearchHotPanel() {
-    var searchContainer = document.querySelector('.search-container');
-    var searchInput = document.getElementById('searchInput');
-    if (!searchContainer || !searchInput || document.getElementById('searchHotPanel')) return;
-
-    var hotTerms = ['AI提示词', '样本量规划', '数据清洗', '变量关系', '交叉滞后模型', 'Zotero'];
-    var panel = document.createElement('div');
-    panel.id = 'searchHotPanel';
-    panel.className = 'search-hot-panel';
-    panel.innerHTML =
-        '<div class="search-hot-title"><i class="fa-solid fa-fire"></i><span>热搜词</span></div>' +
-        '<div class="search-hot-list">' +
-        hotTerms.map(function(term) {
-            return '<button type="button" class="search-hot-term" data-term="' + term + '">' + term + '</button>';
-        }).join('') +
-        '</div>';
-    searchContainer.appendChild(panel);
-
-    var hideTimer = null;
-    function scheduleHide() {
-        clearTimeout(hideTimer);
-        hideTimer = setTimeout(closeSearchHotPanel, 120);
+function handleSearch() {
+    var input = document.getElementById('searchInput');
+    if (!input) return;
+    var overlay = document.getElementById('searchOverlay');
+    if (!overlay || !overlay.classList.contains('visible')) {
+        openSearchOverlay();
+        return;
     }
-    function showPanel() {
-        clearTimeout(hideTimer);
-        openSearchHotPanel();
-    }
+    if (input.value.trim()) performSearch();
+}
 
-    searchContainer.addEventListener('mouseenter', showPanel);
-    searchContainer.addEventListener('mouseleave', scheduleHide);
-    searchContainer.addEventListener('focusin', showPanel);
-    searchContainer.addEventListener('focusout', scheduleHide);
-    searchInput.addEventListener('input', function() {
-        if (searchInput.value.trim()) closeSearchHotPanel();
-        else openSearchHotPanel();
-    });
-    panel.querySelectorAll('.search-hot-term').forEach(function(button) {
-        button.addEventListener('click', function(event) {
-            event.preventDefault();
-            searchInput.value = button.getAttribute('data-term') || '';
-            closeSearchHotPanel();
+function loadHotSearchTerms() {
+    fetch('/api/search/hot?limit=8')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            cachedHotTerms = data.hot || [];
+            updateHotTermsDOM();
+        })
+        .catch(function() {
+            cachedHotTerms = [
+                {term: 'AI提示词', count: 0}, {term: '样本量规划', count: 0},
+                {term: '数据清洗', count: 0}, {term: '变量关系', count: 0},
+                {term: '交叉滞后模型', count: 0}, {term: 'Zotero', count: 0}
+            ];
+            updateHotTermsDOM();
+        });
+}
+
+function updateHotTermsDOM() {
+    var list = document.getElementById('searchHotList');
+    if (!list) return;
+    var terms = cachedHotTerms.slice(0, 8);
+    if (!terms.length) {
+        terms = [{term: 'AI提示词', count: 0}, {term: 'Zotero', count: 0}, {term: 'SPSS', count: 0}, {term: 'Mplus', count: 0}];
+    }
+    list.innerHTML = terms.map(function(t, i) {
+        var cnt = t.count > 0 ? '<span class=\"hot-count\">' + t.count + '</span>' : '';
+        return '<button type=\"button\" class=\"search-hot-term\" data-term=\"' + t.term + '\">' +
+            '<span class=\"hot-rank\">' + (i + 1) + '</span>' +
+            '<span class=\"hot-text\">' + t.term + '</span>' + cnt + '</button>';
+    }).join('');
+
+    list.querySelectorAll('.search-hot-term').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var term = btn.getAttribute('data-term') || '';
+            var input = document.getElementById('searchInput');
+            if (input) input.value = term;
             performSearch();
-            searchInput.focus();
         });
     });
 }
 
-function handleSearch() {
-    performSearch();
+function initSearchOverlay() {
+    if (document.getElementById('searchOverlay')) return;
+
+    // 推荐搜索词
+    var recs = ['Zotero文献管理', 'SPSS数据清洗', 'Mplus语句', '样本量规划',
+                '中介分析', '量表选择', '实验设计', '知情同意书'];
+
+    var overlay = document.createElement('div');
+    overlay.id = 'searchOverlay';
+    overlay.className = 'search-overlay';
+    overlay.innerHTML =
+        '<div class="search-panel">' +
+            '<div class="search-panel-bar">' +
+                '<i class="fa-solid fa-magnifying-glass"></i>' +
+                '<input type="text" id="searchInputBig" placeholder="搜索教程、资源、提示词..." autocomplete="off">' +
+                '<button type="button" class="search-close-btn" aria-label="关闭搜索">&times;</button>' +
+            '</div>' +
+            '<div class="search-panel-body">' +
+                '<div id="searchResults" class="search-results"></div>' +
+                '<div id="searchSuggestions" class="search-suggestions">' +
+                    '<div class="search-col">' +
+                        '<h4 class="search-col-title"><i class="fa-solid fa-lightbulb"></i> 推荐搜索</h4>' +
+                        '<div class="search-rec-list">' + recs.map(function(r) {
+                            return '<button type="button" class="search-rec-term" data-term="' + r + '">' + r + '</button>';
+                        }).join('') + '</div>' +
+                    '</div>' +
+                    '<div class="search-col">' +
+                        '<h4 class="search-col-title"><i class="fa-solid fa-fire"></i> 热搜词</h4>' +
+                        '<div id="searchHotList" class="search-hot-list"></div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+
+    // Sync big input ↔ nav input
+    var navInput = document.getElementById('searchInput');
+    var bigInput = document.getElementById('searchInputBig');
+    bigInput.addEventListener('input', function() {
+        if (navInput) navInput.value = bigInput.value;
+        performSearchBig();
+    });
+    bigInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeSearchOverlay();
+    });
+
+    // Close button
+    overlay.querySelector('.search-close-btn').addEventListener('click', closeSearchOverlay);
+    // Click backdrop
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) closeSearchOverlay(); });
+
+    // Recommended search clicks
+    overlay.querySelectorAll('.search-rec-term').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var term = btn.getAttribute('data-term') || '';
+            bigInput.value = term;
+            if (navInput) navInput.value = term;
+            performSearchBig();
+        });
+    });
+
+    loadHotSearchTerms();
 }
 
-// 输入事件监听
+function performSearchBig() {
+    var bigInput = document.getElementById('searchInputBig');
+    var results = document.getElementById('searchResults');
+    var sug = document.getElementById('searchSuggestions');
+    if (!bigInput || !results) return;
+    var keyword = bigInput.value.trim();
+    if (!keyword) {
+        results.innerHTML = '';
+        results.classList.remove('has-results');
+        if (sug) sug.style.display = '';
+        return;
+    }
+    if (sug) sug.style.display = 'none';
+
+    var items = buildSearchIndex();
+    var scored = [];
+    items.forEach(function(item) {
+        var s = matchScore(item, keyword);
+        if (s > 0) { item._score = s; scored.push(item); }
+    });
+    scored.sort(function(a, b) { return b._score - a._score; });
+    scored = scored.slice(0, 12);
+
+    if (!scored.length) {
+        results.innerHTML = '<div class="search-empty">未找到相关结果，请尝试其他关键词</div>';
+    } else {
+        var groups = { workflow: [], card: [], resource: [] };
+        scored.forEach(function(r) { groups[r.type].push(r); });
+        var labels = { workflow: '科研流程教程', card: '科研审美', resource: '科研资源' };
+        var html = '';
+        for (var type in groups) {
+            if (!groups[type].length) continue;
+            html += '<div class="search-dropdown-group">' + labels[type] + '</div>';
+            groups[type].forEach(function(r) {
+                var icon = r.type === 'workflow' ? 'fa-diagram-project' : r.type === 'card' ? (r.icon || 'fa-file') : 'fa-link';
+                var tag = r.type === 'workflow' ? '第' + r.stage + '阶段' : r.tag || r.module || '';
+                var target = r.type === 'workflow' ? r.id : r.type === 'card' ? (r.tutorialTitle || '') : (r.url || '');
+                var typeLabel = r.type === 'workflow' ? 'flow' : r.type === 'card' ? 'aes' : 'res';
+                html += '<div class=\"search-result-item\" data-type=\"' + typeLabel + '\" data-target=\"' + target + '\">' +
+                    '<div class=\"sr-icon\"><i class=\"fa-solid fa-' + icon + '\"></i></div>' +
+                    '<div class=\"sr-body\"><div class=\"sr-title\">' + highlightMatch(r.title, keyword) + '</div>' +
+                    '<div class=\"sr-desc\">' + (r.desc || '') + '</div></div>' +
+                    (tag ? '<span class=\"sr-tag\">' + tag + '</span>' : '') + '</div>';
+            });
+        }
+        results.innerHTML = html;
+        results.querySelectorAll('.search-result-item').forEach(function(el) {
+            el.addEventListener('click', function() {
+                var type = el.getAttribute('data-type');
+                var target = el.getAttribute('data-target');
+                if (type === 'flow') window.location.href = 'workflow.html?node=' + encodeURIComponent(target);
+                else if (type === 'aes' && target) openTutorial(target);
+                else if (type === 'aes') window.location.href = 'aesthetics.html';
+                else if (type === 'res' && target && target !== '#') showResourceModal(el.querySelector('.sr-title').textContent, target);
+                else window.location.href = 'resources.html';
+                closeSearchOverlay();
+            });
+        });
+    }
+    results.classList.add('has-results');
+}
+
+// 搜索事件监听
 (function initSearchListeners() {
     var searchInput = document.getElementById('searchInput');
     if (!searchInput) return;
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') { closeSearchResults(); searchInput.blur(); }
-    });
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchInput._debounce);
-        searchInput._debounce = setTimeout(performSearch, 250);
-    });
     searchInput.addEventListener('focus', function() {
-        if (searchInput.value.trim()) performSearch();
+        openSearchOverlay();
     });
-    // 点击页面其他地方关闭
-    document.addEventListener('click', function(e) {
-        var dropdown = document.getElementById('searchDropdown');
-        var container = document.querySelector('.search-container');
-        if (dropdown && container && !container.contains(e.target) && !dropdown.contains(e.target)) {
-            closeSearchResults();
-        }
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeSearchOverlay();
     });
 })();
 

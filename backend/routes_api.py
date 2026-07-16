@@ -151,6 +151,46 @@ def track_event():
 
 
 # ═══════════════════════════════════════════════════════════════
+# 搜索热词 API
+# ═══════════════════════════════════════════════════════════════
+
+@api_bp.route('/api/search/hot', methods=['GET'])
+@rate_limit(max_requests=30, window_seconds=60)
+def get_hot_search_terms():
+    """获取热搜词（基于实际搜索/教程观看/资源点击统计）"""
+    from sqlalchemy import func
+    from datetime import timedelta
+    limit = request.args.get('limit', 8, type=int)
+    limit = min(limit, 12)
+    since = datetime.utcnow() - timedelta(days=14)
+
+    hot = []
+    # 教程观看热门
+    terms = (
+        db.session.query(
+            SiteStat.event_key,
+            func.count(SiteStat.id).label('cnt')
+        )
+        .filter(
+            SiteStat.event_type.in_(['tutorial_view', 'resource_click']),
+            SiteStat.event_key != '',
+            SiteStat.created_at >= since
+        )
+        .group_by(SiteStat.event_key)
+        .order_by(func.count(SiteStat.id).desc())
+        .limit(limit * 2)
+        .all()
+    )
+    for item in terms:
+        name = item[0]
+        if len(name) > 20: name = name[:20] + '…'
+        hot.append({'term': name, 'count': item[1]})
+
+    hot = hot[:limit]
+    return jsonify({'hot': hot}), 200
+
+
+# ═══════════════════════════════════════════════════════════════
 # 用户浏览历史 API
 # ═══════════════════════════════════════════════════════════════
 
