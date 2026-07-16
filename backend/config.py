@@ -29,12 +29,12 @@ class Config:
     # 分页
     API_PER_PAGE = 20
 
-    # AI API (DeepSeek 免费额度: 10M tokens, 注册即用)
-    # 注册地址: https://platform.deepseek.com → API Keys → 创建
-    # 免费额度用完可换用硅基流动: https://siliconflow.cn (新用户送14元)
-    AI_API_KEY = os.environ.get('AI_API_KEY', os.environ.get('DEEPSEEK_API_KEY', ''))
-    AI_API_URL = os.environ.get('AI_API_URL', 'https://api.deepseek.com/v1/chat/completions')
-    AI_MODEL = os.environ.get('AI_MODEL', 'deepseek-chat')
+    # AI API（智谱 GLM-4-Flash：完全免费，无 Token 上限）
+    # 注册地址: https://open.bigmodel.cn → 手机号注册 → API Keys → 创建
+    # 注意：必须实名认证(免费)后才能用，认证在"个人中心→实名认证"
+    AI_API_KEY = os.environ.get('AI_API_KEY', os.environ.get('GLM_API_KEY', ''))
+    AI_API_URL = os.environ.get('AI_API_URL', 'https://open.bigmodel.cn/api/paas/v4/chat/completions')
+    AI_MODEL = os.environ.get('AI_MODEL', 'glm-4-flash')
 
 
 class DevelopmentConfig(Config):
