@@ -66,10 +66,6 @@ def save_upload(file) -> dict:
     if not allowed_file(original_name):
         return {'success': False, 'error': f'不支持的文件格式'}
 
-    # 读取文件数据用于验证
-    file_data = file.read()
-    file.seek(0)
-
     # 生成唯一文件名
     ext = original_name.rsplit('.', 1)[1].lower()
     unique_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.{ext}"

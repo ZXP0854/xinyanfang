@@ -196,7 +196,7 @@ def api_tutorial_create():
     )
     db.session.add(t)
     db.session.commit()
-    _log_audit(session.get('admin_user_id'), 'create_tutorial',
+    _log_audit(g.get('admin_user_id') or session.get('admin_user_id'), 'create_tutorial',
                target_type='tutorial', target_id=t.id,
                detail=f'node_id={t.node_id}')
     return jsonify({'tutorial': t.to_dict()}), 201
@@ -226,11 +226,12 @@ def api_tutorial_update(tutorial_id):
     if 'is_published' in data:
         t.is_published = bool(data['is_published'])
     if 'sort_order' in data:
-        t.sort_order = int(data['sort_order'])
+        try: t.sort_order = int(data['sort_order'])
+        except (ValueError, TypeError): return jsonify({'error': 'sort_order 必须为整数'}), 400
     t.updated_at = datetime.utcnow()
 
     db.session.commit()
-    _log_audit(session.get('admin_user_id'), 'update_tutorial',
+    _log_audit(g.get('admin_user_id') or session.get('admin_user_id'), 'update_tutorial',
                target_type='tutorial', target_id=t.id,
                detail=f'node_id={t.node_id}')
     return jsonify({'tutorial': t.to_dict()}), 200
@@ -243,7 +244,7 @@ def api_tutorial_delete(tutorial_id):
     t = Tutorial.query.get_or_404(tutorial_id)
     db.session.delete(t)
     db.session.commit()
-    _log_audit(session.get('admin_user_id'), 'delete_tutorial',
+    _log_audit(g.get('admin_user_id') or session.get('admin_user_id'), 'delete_tutorial',
                target_type='tutorial', target_id=tutorial_id)
     return jsonify({'message': '教程已删除'}), 200
 
@@ -281,7 +282,7 @@ def api_resource_create():
     )
     db.session.add(r)
     db.session.commit()
-    _log_audit(session.get('admin_user_id'), 'create_resource',
+    _log_audit(g.get('admin_user_id') or session.get('admin_user_id'), 'create_resource',
                target_type='resource', target_id=r.id)
     return jsonify({'resource': r.to_dict()}), 201
 
@@ -300,7 +301,8 @@ def api_resource_update(resource_id):
             if field == 'is_published':
                 val = bool(val)
             elif field == 'sort_order':
-                val = int(val)
+                try: val = int(val)
+                except (ValueError, TypeError): val = 0
             elif isinstance(val, str):
                 val = val.strip()[:500]
             setattr(r, field, val)
@@ -315,7 +317,7 @@ def api_resource_delete(resource_id):
     r = Resource.query.get_or_404(resource_id)
     db.session.delete(r)
     db.session.commit()
-    _log_audit(session.get('admin_user_id'), 'delete_resource',
+    _log_audit(g.get('admin_user_id') or session.get('admin_user_id'), 'delete_resource',
                target_type='resource', target_id=resource_id)
     return jsonify({'message': '资源已删除'}), 200
 
@@ -375,7 +377,8 @@ def api_card_update(card_id):
             if field == 'is_published':
                 val = bool(val)
             elif field in ('height', 'sort_order'):
-                val = int(val)
+                try: val = int(val)
+                except (ValueError, TypeError): val = field == 'height' and 220 or 0
             elif isinstance(val, str):
                 val = val.strip()[:500]
             setattr(c, field, val)
@@ -421,7 +424,7 @@ def api_upload():
     )
     db.session.add(upload)
     db.session.commit()
-    _log_audit(session.get('admin_user_id'), 'upload_file',
+    _log_audit(g.get('admin_user_id') or session.get('admin_user_id'), 'upload_file',
                target_type='upload', target_id=upload.id,
                detail=f'file={result["original_name"]}')
 
@@ -477,7 +480,7 @@ def api_convert_docx():
     if not conversion['success']:
         return jsonify({'error': conversion['error']}), 500
 
-    _log_audit(session.get('admin_user_id'), 'convert_docx',
+    _log_audit(g.get('admin_user_id') or session.get('admin_user_id'), 'convert_docx',
                target_type='upload', target_id=upload.id,
                detail=f'file={result["original_name"]}')
 

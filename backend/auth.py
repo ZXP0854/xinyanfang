@@ -5,7 +5,7 @@ JWT 认证模块
 
 from functools import wraps
 from datetime import datetime
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, g
 from flask_jwt_extended import (
     create_access_token, create_refresh_token,
     jwt_required, get_jwt_identity, get_jwt,
@@ -157,6 +157,7 @@ def admin_required(fn=None, *, optional=False):
                         return _redirect('/admin/login')
                     user = User.query.get(int(user_id))
                     if user and user.is_active:
+                        g.admin_user_id = user.id  # 供审计日志使用
                         return f(*args, **kwargs)
             except Exception:
                 pass

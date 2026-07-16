@@ -325,6 +325,7 @@ function getRichContent(nodeId, nodeName) {
 }
 
 // 渲染教程详情（优先API，降级硬编码）
+var _renderDetailAbort = null;
 function renderDetail(nodeId) {
     const detailDiv = document.getElementById('tutorial-detail');
     if (!detailDiv) return;
@@ -345,13 +346,18 @@ function renderDetail(nodeId) {
     });
 
     // 滚动到教程区域顶部
-    detailDiv.scrollIntoView({ block: 'start', behavior: 'instant' });
+    detailDiv.scrollIntoView({ block: 'start', behavior: 'auto' });
 
     // 显示加载状态
     detailDiv.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--muted)"><i class="fa-solid fa-spinner fa-pulse"></i><p>加载中……</p></div>';
 
+    // 取消上一次未完成的请求，防止快速点击导致内容错乱
+    if (_renderDetailAbort) _renderDetailAbort.abort();
+    var controller = new AbortController();
+    _renderDetailAbort = controller;
+
     // 从API加载
-    fetch('/api/tutorials/' + encodeURIComponent(nodeId))
+    fetch('/api/tutorials/' + encodeURIComponent(nodeId), { signal: controller.signal })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             var tutorialHtml = '';
@@ -364,7 +370,8 @@ function renderDetail(nodeId) {
             initCodeBlocks(detailDiv);
             attachImageModalHandlers();
         })
-        .catch(function() {
+        .catch(function(e) {
+            if (e && e.name === 'AbortError') return; // 被取消的请求，不处理
             // 网络错误 → 降级
             detailDiv.innerHTML = buildWorkflowDetailHtml(node.id, node.name, '');
             fixPdfEmbeds();
@@ -1520,7 +1527,12 @@ function showResourceModal(name, description, url) {
 
     const modal = document.getElementById('resource-modal');
     if (!modal) return;
-    document.getElementById('resource-modal-title').textContent = name;
+    const titleEl = document.getElementById('resource-modal-title');
+    const descEl = document.getElementById('resource-modal-desc');
+    const btn = document.getElementById('resource-modal-btn');
+    if (!titleEl || !descEl || !btn) return;
+
+    titleEl.textContent = name;
 
     // 美化描述：每行换行 + 兼容单行无格式的描述
     var descHtml = '';
@@ -1530,9 +1542,8 @@ function showResourceModal(name, description, url) {
         if (!line) continue;
         descHtml += '<span class="rm-desc-line">' + line + '</span>';
     }
-    document.getElementById('resource-modal-desc').innerHTML = descHtml;
+    descEl.innerHTML = descHtml;
 
-    const btn = document.getElementById('resource-modal-btn');
     btn.href = url;
     btn.style.display = url && url !== '#' ? 'inline-flex' : 'none';
     modal.classList.add('visible');
@@ -1726,6 +1737,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initUserPanelShell();
     initSearchHotPanel();
     loadWorkflowPreface();
+    attachImageModalHandlers();  // 确保所有页面的图片弹窗都能关闭
     // 资源弹窗关闭按钮
     const rmClose = document.querySelector('.resource-modal-close');
     if (rmClose) rmClose.addEventListener('click', closeResourceModal);
@@ -1737,8 +1749,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // 点击弹窗外部关闭
         const resourceModal = document.getElementById('resource-modal');
-        if (resourceModal && resourceModal.classList.contains('visible') && !resourceModal.querySelector('.resource-modal-card').contains(e.target) && !e.target.closest('.rm-links a')) {
-            closeResourceModal();
+        if (resourceModal && resourceModal.classList.contains('visible')) {
+            const card = resourceModal.querySelector('.resource-modal-card');
+            if (card && !card.contains(e.target) && !e.target.closest('.rm-links a')) {
+                closeResourceModal();
+            }
         }
     });
 
