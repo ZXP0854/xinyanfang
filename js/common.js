@@ -1034,12 +1034,22 @@ var cachedHotTerms = [];
 
 function buildSearchIndex() {
     var items = [];
+    var wf = (typeof window !== 'undefined' && window.WORKFLOW_SECTION_CONTENT) ? window.WORKFLOW_SECTION_CONTENT : {};
+
     treeData.forEach(function(node) {
         var meta = tutorialMeta[node.id];
+        // 合并教程结构化内容作为全文搜索素材
+        var sections = wf[node.id] || {};
+        var fullText = (meta ? (meta.title + ' ' + meta.desc) : node.name) + ' ';
+        ['learningCost','useScenarios','accomplishments','recommendedTools','commonMistakes','finalTemplate'].forEach(function(k) {
+            if (sections[k]) fullText += sections[k] + ' ';
+        });
         items.push({
             type: 'workflow', id: node.id,
             title: meta ? meta.title : node.name,
-            desc: meta ? meta.desc : '', stage: node.stage
+            desc: meta ? meta.desc : '',
+            stage: node.stage,
+            fullText: fullText  // 全文搜索
         });
     });
     cachedCards.forEach(function(card) {
@@ -1047,7 +1057,8 @@ function buildSearchIndex() {
             type: 'card',
             title: card.title || '', desc: card.description || '',
             tag: card.tag || card.category || '', category: card.category || '',
-            tutorialTitle: card.tutorial_title || '', icon: card.icon || 'fa-solid fa-file'
+            tutorialTitle: card.tutorial_title || '', icon: card.icon || 'fa-solid fa-file',
+            fullText: (card.title || '') + ' ' + (card.description || '') + ' ' + (card.tag || '')
         });
     });
     for (var module in cachedResources) {
@@ -1056,7 +1067,8 @@ function buildSearchIndex() {
             items.push({
                 type: 'resource', title: item.name || '',
                 desc: item.description || '', module: module,
-                url: item.link_value || '#'
+                url: item.link_value || '#',
+                fullText: (item.name || '') + ' ' + (item.description || '') + ' ' + module
             });
         });
     }
@@ -1069,13 +1081,17 @@ function matchScore(item, keyword) {
     var d = (item.desc || '').toLowerCase();
     var tag = (item.tag || '').toLowerCase();
     var mod = (item.module || '').toLowerCase();
-    if (t === kw) return 100;
-    if (t.indexOf(kw) === 0) return 70;
-    if (t.indexOf(kw) !== -1) return 50;
-    if (d.indexOf(kw) !== -1) return 20;
+    var ft = (item.fullText || '').toLowerCase();
+    // 标题精确匹配
+    if (t === kw) return 150;
+    if (t.indexOf(kw) === 0) return 100;
+    if (t.indexOf(kw) !== -1) return 70;
+    // 全文匹配（教程结构化内容 + 资源描述）
+    if (ft.indexOf(kw) !== -1) return 40;
+    // 简短描述匹配
+    if (d.indexOf(kw) !== -1) return 25;
     if (tag.indexOf(kw) !== -1) return 15;
     if (mod.indexOf(kw) !== -1) return 10;
-    if (item.type === 'workflow') return 5;
     return 0;
 }
 
@@ -1119,7 +1135,7 @@ function performSearch() {
                     (r.type === 'workflow' ? r.id : r.type === 'card' ? (r.tutorialTitle || '') : (r.url || '')) + '">' +
                     '<div class="sr-icon"><i class="fa-solid fa-' + icon + '"></i></div>' +
                     '<div class="sr-body"><div class="sr-title">' + highlightMatch(r.title, keyword) + '</div>' +
-                    '<div class="sr-desc">' + (r.desc || '') + '</div></div>' +
+                    '<div class="sr-desc">' + highlightMatch(r.desc || '', keyword) + '</div></div>' +
                     (tag ? '<span class="sr-tag">' + tag + '</span>' : '') + '</div>';
             });
         }
@@ -1220,11 +1236,15 @@ function updateHotTermsDOM() {
     }).join('');
 
     list.querySelectorAll('.search-hot-term').forEach(function(btn) {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();  // 防止冒泡触发关闭逻辑
             var term = btn.getAttribute('data-term') || '';
-            var input = document.getElementById('searchInput');
-            if (input) input.value = term;
-            performSearch();
+            // 同步两个输入框
+            var navInput = document.getElementById('searchInput');
+            var bigInput = document.getElementById('searchInputBig');
+            if (navInput) navInput.value = term;
+            if (bigInput) bigInput.value = term;
+            performSearchBig();
         });
     });
 }
@@ -1341,7 +1361,7 @@ function performSearchBig() {
                 html += '<div class=\"search-result-item\" data-type=\"' + typeLabel + '\" data-target=\"' + target + '\">' +
                     '<div class=\"sr-icon\"><i class=\"fa-solid fa-' + icon + '\"></i></div>' +
                     '<div class=\"sr-body\"><div class=\"sr-title\">' + highlightMatch(r.title, keyword) + '</div>' +
-                    '<div class=\"sr-desc\">' + (r.desc || '') + '</div></div>' +
+                    '<div class=\"sr-desc\">' + highlightMatch(r.desc || '', keyword) + '</div></div>' +
                     (tag ? '<span class=\"sr-tag\">' + tag + '</span>' : '') + '</div>';
             });
         }
