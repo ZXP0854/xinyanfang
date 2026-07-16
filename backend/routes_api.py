@@ -4,7 +4,8 @@
 """
 
 from datetime import datetime
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
+import urllib.parse
 from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from models import db, Tutorial, Resource, Card, SiteStat, UserHistory
 from middleware import rate_limit, get_client_ip
@@ -345,3 +346,131 @@ def save_user_history():
     db.session.add(h)
     db.session.commit()
     return jsonify({'ok': True}), 201
+# AI 问答接口 — 追加到 routes_api.py 末尾
+
+@api_bp.route('/api/ai/ask', methods=['POST'])
+@rate_limit(max_requests=10, window_seconds=60)
+def ai_ask():
+    """AI 问答：调用 DeepSeek API，回复后匹配本地教程/资源"""
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': '请提供 JSON 数据'}), 400
+
+    question = (data.get('question') or '').strip()
+    if not question:
+        return jsonify({'error': '问题不能为空'}), 400
+    if len(question) > 500:
+        return jsonify({'error': '问题过长'}), 400
+
+    api_key = current_app.config.get('AI_API_KEY', '')
+    api_url = current_app.config.get('AI_API_URL', 'https://api.deepseek.com/v1/chat/completions')
+    model = current_app.config.get('AI_MODEL', 'deepseek-chat')
+
+    if not api_key:
+        return jsonify({'error': 'AI 服务未配置 API Key'}), 503
+
+    # 搜索本地内容
+    local_results = _search_local(question)
+
+    # 构造 Prompt
+    context = ''
+    for r in local_results[:5]:
+        context += f'【{r["type"]}】{r["title"]}: {r["snippet"]}\n'
+
+    system_prompt = (
+        '你是心研坊的AI科研助手，专门帮助心理学科研新手。'
+        '请用通俗易懂的中文回答，控制在200字以内。'
+        '如果回答涉及具体方法或工具，请简要说明操作步骤。'
+    )
+    if context:
+        # Actually don't stuff context into prompt — AI answers freely, backend matches later
+        pass
+
+    # 调用 DeepSeek
+    import json as _json, urllib.request as _req, ssl as _ssl
+    ctx = _ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = _ssl.CERT_NONE
+
+    payload = _json.dumps({
+        'model': model,
+        'messages': [
+            {'role': 'system', 'content': '你是心研坊AI科研助手，帮助心理学科研新手。用通俗中文回答，200字内。'},
+            {'role': 'user', 'content': question}
+        ],
+        'max_tokens': 600,
+        'temperature': 0.7,
+    }).encode('utf-8')
+
+    try:
+        req = _req.Request(api_url, data=payload, headers={
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + api_key,
+        })
+        resp = _req.urlopen(req, context=ctx, timeout=25)
+        result = _json.loads(resp.read())
+        ai_answer = result['choices'][0]['message']['content'].strip()
+    except Exception as e:
+        current_app.logger.error('AI API error: ' + str(e))
+        # 降级：纯本地搜索
+        ai_answer = '（AI 服务暂不可用，以下是本地搜索结果）'
+        return jsonify({
+            'ai_answer': ai_answer,
+            'related': local_results[:5],
+            'fallback': True,
+        }), 200
+
+    return jsonify({
+        'ai_answer': ai_answer,
+        'related': local_results[:5],
+    }), 200
+
+
+def _search_local(keyword):
+    """从本地数据库搜索匹配的教程和资源"""
+    results = []
+    kw = keyword.lower()
+
+    # 搜索教程（标题 + 摘要 + content）
+    tutorials = Tutorial.query.filter(
+        Tutorial.is_published == True,
+        db.or_(
+            Tutorial.title.ilike(f'%{kw}%'),
+            Tutorial.summary.ilike(f'%{kw}%'),
+            Tutorial.content.ilike(f'%{kw}%'),
+        )
+    ).limit(8).all()
+
+    for t in tutorials:
+        snippet = (t.summary or '')[:120]
+        if kw not in (t.title + snippet).lower():
+            # 从 content 中提取关键词片段
+            idx = (t.content or '').lower().find(kw)
+            if idx >= 0:
+                snippet = t.content[max(0, idx - 30):idx + len(kw) + 60].replace('\n', ' ')[:150]
+        link = '/tutorial.html?title=' + urllib.parse.quote(t.title)
+        results.append({
+            'type': '教程',
+            'title': t.title,
+            'snippet': snippet or t.title,
+            'link': link,
+        })
+
+    # 搜索资源
+    resources = Resource.query.filter(
+        Resource.is_published == True,
+        db.or_(
+            Resource.name.ilike(f'%{kw}%'),
+            Resource.description.ilike(f'%{kw}%'),
+        )
+    ).limit(5).all()
+
+    for r in resources:
+        results.append({
+            'type': '资源',
+            'title': r.name,
+            'snippet': (r.description or '')[:120],
+            'link': r.link_value if r.link_value and r.link_value != '#' else '/resources.html',
+        })
+
+    return results[:8]

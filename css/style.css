@@ -3169,3 +3169,105 @@ body.search-open {
         gap: 16px;
     }
 }
+
+/* ─── AI 问答按钮 ─── */
+.ai-ask-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border: 1px solid #cc785c;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #cc785c, #b8654a);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+    transition: opacity 0.15s, transform 0.15s;
+}
+.ai-ask-btn:hover {
+    opacity: 0.88;
+    transform: scale(1.02);
+}
+.ai-ask-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+.ai-ask-btn i {
+    font-size: 0.9rem;
+}
+
+/* ─── AI 回复区域 ─── */
+.ai-response {
+    margin-bottom: 20px;
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #fdf9f6, #faf5f0);
+    border: 1px solid #e8dcd2;
+}
+.ai-answer-text {
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: var(--ink);
+    margin-bottom: 16px;
+}
+.ai-answer-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #cc785c;
+    margin-bottom: 10px;
+    letter-spacing: 0.03em;
+}
+.ai-related-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #8c7a6b;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.ai-related-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.ai-related-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #e8dcd2;
+    font-size: 0.82rem;
+    color: var(--primary);
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+.ai-related-link:hover {
+    border-color: #cc785c;
+    background: #fef7f4;
+}
+.ai-related-link i {
+    font-size: 0.7rem;
+    color: #a09080;
+}
+.ai-loading {
+    text-align: center;
+    padding: 2rem;
+    color: #a09080;
+}
+.ai-loading i {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 8px;
+    animation: fa-spin 1s linear infinite;
+}

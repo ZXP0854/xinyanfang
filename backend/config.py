@@ -29,6 +29,13 @@ class Config:
     # 分页
     API_PER_PAGE = 20
 
+    # AI API (DeepSeek 免费额度: 10M tokens, 注册即用)
+    # 注册地址: https://platform.deepseek.com → API Keys → 创建
+    # 免费额度用完可换用硅基流动: https://siliconflow.cn (新用户送14元)
+    AI_API_KEY = os.environ.get('AI_API_KEY', os.environ.get('DEEPSEEK_API_KEY', ''))
+    AI_API_URL = os.environ.get('AI_API_URL', 'https://api.deepseek.com/v1/chat/completions')
+    AI_MODEL = os.environ.get('AI_MODEL', 'deepseek-chat')
+
 
 class DevelopmentConfig(Config):
     """开发环境"""

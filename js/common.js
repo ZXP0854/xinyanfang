@@ -1222,6 +1222,71 @@ function closeSearchOverlay() {
     if (sug) sug.style.display = '';
 }
 
+// ─── AI 问答 ───
+function handleAiAsk(question) {
+    var aiBtn = document.getElementById('aiAskBtn');
+    var aiResp = document.getElementById('aiResponse');
+    var results = document.getElementById('searchResults');
+    var sug = document.getElementById('searchSuggestions');
+    if (!aiResp) return;
+
+    // 隐藏推荐/热搜，显示加载状态
+    if (sug) sug.style.display = 'none';
+    if (results) { results.innerHTML = ''; results.classList.remove('has-results'); }
+    if (aiBtn) { aiBtn.classList.add('loading'); aiBtn.innerHTML = '<i class=\"fa-solid fa-spinner fa-pulse\"></i> 思考中'; }
+    aiResp.style.display = 'block';
+    aiResp.innerHTML = '<div class=\"ai-loading\"><i class=\"fa-solid fa-brain\"></i><p>AI 正在思考……</p></div>';
+
+    var navInput = document.getElementById('searchInput');
+    if (navInput) navInput.value = question;
+
+    fetch('/api/ai/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: question }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var answer = data.ai_answer || '（AI 暂时无法回答，请稍后重试）';
+        var related = data.related || [];
+        var relHtml = '';
+        if (related.length) {
+            relHtml = '<p class=\"ai-related-title\"><i class=\"fa-solid fa-link\"></i> 相关教程/资源：</p>' +
+                '<div class=\"ai-related-list\">' +
+                related.map(function(r) {
+                    return '<a class=\"ai-related-link\" href=\"' + r.link + '\" target=\"_self\">' +
+                        '<i class=\"fa-solid fa-' + (r.type === '教程' ? 'diagram-project' : 'link') + '\"></i>' +
+                        r.title + '</a>';
+                }).join('') + '</div>';
+        }
+        aiResp.innerHTML =
+            '<div class=\"ai-answer-label\"><i class=\"fa-solid fa-robot\"></i> AI 回答</div>' +
+            '<div class=\"ai-answer-text\">' + answer.replace(/\n/g, '<br>') + '</div>' +
+            relHtml;
+        if (related.length) {
+            aiResp.querySelectorAll('.ai-related-link').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var href = link.getAttribute('href');
+                    if (href.startsWith('/tutorial.html')) {
+                        window.location.href = href;
+                    } else {
+                        window.open(href, '_blank');
+                    }
+                    closeSearchOverlay();
+                });
+            });
+        }
+    })
+    .catch(function() {
+        aiResp.innerHTML = '<div class=\"ai-answer-label\"><i class=\"fa-solid fa-triangle-exclamation\"></i> 请求失败</div>' +
+            '<div class=\"ai-answer-text\">AI 服务暂时不可用，请稍后重试。您可以在下方搜索框进行本地搜索。</div>';
+    })
+    .finally(function() {
+        if (aiBtn) { aiBtn.classList.remove('loading'); aiBtn.innerHTML = '<i class=\"fa-solid fa-robot\"></i> AI 问答'; }
+    });
+}
+
 function handleSearch() {
     var navInput = document.getElementById('searchInput');
     if (!navInput) return;
@@ -1310,10 +1375,12 @@ function initSearchOverlay() {
         '<div class="search-panel">' +
             '<div class="search-panel-bar">' +
                 '<i class="fa-solid fa-magnifying-glass"></i>' +
-                '<input type="text" id="searchInputBig" placeholder="搜索教程、资源、提示词..." autocomplete="off">' +
+                '<input type="text" id="searchInputBig" placeholder="输入问题，AI 帮你解答科研疑惑..." autocomplete="off">' +
+                '<button type="button" class="ai-ask-btn" id="aiAskBtn" title="AI 问答"><i class="fa-solid fa-robot"></i> AI 问答</button>' +
                 '<button type="button" class="search-close-btn" aria-label="关闭搜索">&times;</button>' +
             '</div>' +
             '<div class="search-panel-body">' +
+                '<div id="aiResponse" class="ai-response" style="display:none;"></div>' +
                 '<div id="searchResults" class="search-results"></div>' +
                 '<div id="searchSuggestions" class="search-suggestions">' +
                     '<div class="search-col">' +
@@ -1347,6 +1414,24 @@ function initSearchOverlay() {
     overlay.querySelector('.search-close-btn').addEventListener('click', closeSearchOverlay);
     // Click backdrop
     overlay.addEventListener('click', function(e) { if (e.target === overlay) closeSearchOverlay(); });
+
+    // AI 问答按钮
+    var aiBtn = document.getElementById('aiAskBtn');
+    if (aiBtn) {
+        aiBtn.addEventListener('click', function() {
+            var q = bigInput.value.trim();
+            if (!q) { bigInput.focus(); return; }
+            handleAiAsk(q);
+        });
+        // Enter 键也触发 AI 问答
+        bigInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                var q = bigInput.value.trim();
+                if (q) handleAiAsk(q);
+            }
+        });
+    }
 
     // Recommended search clicks
     overlay.querySelectorAll('.search-rec-term').forEach(function(btn) {
