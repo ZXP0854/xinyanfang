@@ -455,7 +455,7 @@ def _split_keywords(text):
     # 保留有意义的连续字符
     clean = ''
     for ch in text:
-        if ch not in junk and not ch.isascii():
+        if ch not in junk and ord(ch) > 127:
             clean += ch
     if not clean:
         return [text]
