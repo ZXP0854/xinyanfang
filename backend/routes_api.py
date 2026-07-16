@@ -3,8 +3,10 @@
 供前端（未来）或其他客户端调用，无需认证
 """
 
+from datetime import datetime
 from flask import Blueprint, request, jsonify
-from models import db, Tutorial, Resource, Card, SiteStat
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
+from models import db, Tutorial, Resource, Card, SiteStat, UserHistory
 from middleware import rate_limit, get_client_ip
 
 api_bp = Blueprint('api', __name__)
@@ -144,5 +146,85 @@ def track_event():
         user_agent=ua,
     )
     db.session.add(stat)
+    db.session.commit()
+    return jsonify({'ok': True}), 201
+
+
+# ═══════════════════════════════════════════════════════════════
+# 用户浏览历史 API
+# ═══════════════════════════════════════════════════════════════
+
+@api_bp.route('/api/user/history', methods=['GET'])
+def get_user_history():
+    """获取当前用户的浏览历史（需登录）"""
+    user_id = None
+    try:
+        verify_jwt_in_request(optional=True)
+        uid = get_jwt_identity()
+        if uid:
+            user_id = int(uid)
+    except Exception:
+        pass
+
+    if not user_id:
+        return jsonify({'history': [], 'message': '未登录'}), 200
+
+    limit = request.args.get('limit', 30, type=int)
+    limit = min(limit, 100)
+    history = (
+        UserHistory.query
+        .filter_by(user_id=user_id)
+        .order_by(UserHistory.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return jsonify({'history': [h.to_dict() for h in history]}), 200
+
+
+@api_bp.route('/api/user/history', methods=['POST'])
+def save_user_history():
+    """保存用户浏览记录（需登录）"""
+    user_id = None
+    try:
+        verify_jwt_in_request(optional=True)
+        uid = get_jwt_identity()
+        if uid:
+            user_id = int(uid)
+    except Exception:
+        pass
+
+    if not user_id:
+        return jsonify({'ok': False, 'message': '未登录'}), 200
+
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': '请提供 JSON 数据'}), 400
+
+    event_type = (data.get('event_type') or '').strip()
+    if event_type not in ('page_view', 'tutorial_view', 'resource_click', 'prompt_view'):
+        return jsonify({'error': '无效的事件类型'}), 400
+
+    event_key = (data.get('event_key') or '')[:300]
+    event_label = (data.get('event_label') or '')[:300]
+
+    # 同一用户同一教程节点30分钟内的重复记录跳过
+    from datetime import timedelta
+    cutoff = datetime.utcnow() - timedelta(minutes=30)
+    existing = UserHistory.query.filter(
+        UserHistory.user_id == user_id,
+        UserHistory.event_type == event_type,
+        UserHistory.event_key == event_key,
+        UserHistory.created_at >= cutoff,
+    ).first()
+    if existing:
+        return jsonify({'ok': True, 'skipped': True}), 200
+
+    h = UserHistory(
+        user_id=user_id,
+        event_type=event_type,
+        event_key=event_key,
+        event_label=event_label,
+    )
+    db.session.add(h)
     db.session.commit()
     return jsonify({'ok': True}), 201

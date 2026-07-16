@@ -1702,17 +1702,59 @@ function trackStatsEvent(eventType, eventKey) {
     } catch(e) {}
 }
 
+// ─── 用户浏览历史追踪 ───
+function getUserToken() {
+    try {
+        return sessionStorage.getItem('xinyanfang_access_token') || null;
+    } catch(e) { return null; }
+}
+
+function isLoggedIn() {
+    return !!getUserToken();
+}
+
+function trackUserHistory(eventType, eventKey, eventLabel) {
+    var token = getUserToken();
+    if (!token) return;
+    try {
+        fetch('/api/user/history', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            },
+            body: JSON.stringify({ event_type: eventType, event_key: eventKey || '', event_label: eventLabel || '' }),
+        }).catch(function() {});
+    } catch(e) {}
+}
+
+function loadUserHistory(limit) {
+    var token = getUserToken();
+    if (!token) return Promise.resolve([]);
+    return fetch('/api/user/history?limit=' + (limit || 30), {
+        headers: { 'Authorization': 'Bearer ' + token },
+    })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { return data.history || []; })
+        .catch(function() { return []; });
+}
+
 // 资源点击追踪（在 showResourceModal 中调用）
 var _origShowResourceModal = showResourceModal;
 showResourceModal = function(name, description, url) {
     trackStatsEvent('resource_click', name);
+    trackUserHistory('resource_click', name, name);
     _origShowResourceModal(name, description, url);
 };
 
 // 教程观看追踪：在 renderDetail 成功后调用
 var _origRenderDetail = renderDetail;
 renderDetail = function(nodeId) {
-    if (nodeId) trackStatsEvent('tutorial_view', nodeId);
+    if (nodeId) {
+        trackStatsEvent('tutorial_view', nodeId);
+        var node = treeData && treeData.find(function(n) { return n.id === nodeId; });
+        trackUserHistory('tutorial_view', nodeId, node ? node.name : nodeId);
+    }
     _origRenderDetail(nodeId);
 };
 

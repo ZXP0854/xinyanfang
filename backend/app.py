@@ -71,6 +71,10 @@ def _run_migrations(db):
         "ALTER TABLE uploads ADD COLUMN file_type VARCHAR(20) DEFAULT 'document'",
         "ALTER TABLE tutorials ADD COLUMN category VARCHAR(20) DEFAULT 'workflow'",
         "ALTER TABLE cards ADD COLUMN category VARCHAR(50) DEFAULT ''",
+        "CREATE TABLE IF NOT EXISTS user_history (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, event_type VARCHAR(30) NOT NULL, event_key VARCHAR(300) DEFAULT '', event_label VARCHAR(300) DEFAULT '', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id))",
+        "CREATE INDEX IF NOT EXISTS ix_user_history_user_id ON user_history (user_id)",
+        "CREATE INDEX IF NOT EXISTS ix_user_history_event_type ON user_history (event_type)",
+        "CREATE INDEX IF NOT EXISTS ix_user_history_created_at ON user_history (created_at)",
     ]
     for sql in migrations:
         try:

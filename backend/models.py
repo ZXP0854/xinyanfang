@@ -184,3 +184,28 @@ class SiteStat(db.Model):
     ip_address = db.Column(db.String(45), default='')
     user_agent = db.Column(db.String(500), default='')
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+
+class UserHistory(db.Model):
+    """用户浏览历史记录"""
+    __tablename__ = 'user_history'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    event_type = db.Column(db.String(30), nullable=False, index=True)
+    # 'page_view' | 'tutorial_view' | 'resource_click' | 'prompt_view'
+    event_key = db.Column(db.String(300), default='')
+    event_label = db.Column(db.String(300), default='')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    user = db.relationship('User', backref=db.backref('history', lazy='dynamic', order_by='UserHistory.created_at.desc()'))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'event_type': self.event_type,
+            'event_key': self.event_key,
+            'event_label': self.event_label,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }

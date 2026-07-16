@@ -6,7 +6,7 @@
 import os
 from datetime import datetime
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, current_app
-from models import db, Tutorial, Resource, Card, Upload, AuditLog, SiteStat
+from models import db, Tutorial, Resource, Card, Upload, AuditLog, SiteStat, User, UserHistory
 from auth import admin_required, _log_audit
 from utils import save_upload, delete_upload_file, allowed_file, convert_docx_with_images
 from middleware import sanitize_input, sanitize_html, validate_required
@@ -73,6 +73,7 @@ def dashboard():
         db.session.query(func.count(func.distinct(SiteStat.ip_address)))
         .scalar()
     ) or 0
+    stat_counts['registered_users'] = User.query.count()
 
     recent_logs = (
         AuditLog.query
@@ -80,7 +81,18 @@ def dashboard():
         .limit(20)
         .all()
     )
-    return render_template('admin/dashboard.html', counts=counts, stat_counts=stat_counts, logs=recent_logs)
+
+    # 最近用户浏览历史
+    recent_histories = (
+        UserHistory.query
+        .order_by(UserHistory.created_at.desc())
+        .limit(15)
+        .all()
+    )
+
+    return render_template('admin/dashboard.html',
+        counts=counts, stat_counts=stat_counts,
+        logs=recent_logs, histories=recent_histories)
 
 
 @admin_bp.route('/admin/tutorials')

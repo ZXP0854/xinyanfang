@@ -20,6 +20,10 @@
         <div class="num">{{ counts.uploads }}</div>
         <div class="label">上传文件</div>
     </div>
+    <div class="stat-card">
+        <div class="num">{{ stat_counts.registered_users }}</div>
+        <div class="label">注册用户</div>
+    </div>
 </div>
 
 <div class="card" style="margin-bottom:24px;">
@@ -46,6 +50,33 @@
             <div class="label">资源点击量</div>
         </div>
     </div>
+</div>
+
+<div class="card" style="margin-bottom:24px;">
+    <h3 style="margin-bottom:16px;">用户浏览历史 (最近)</h3>
+    {% if histories %}
+    <table>
+        <thead><tr><th>时间</th><th>用户ID</th><th>类型</th><th>内容</th></tr></thead>
+        <tbody>
+        {% for h in histories %}
+        <tr>
+            <td>{{ h.created_at.strftime('%m-%d %H:%M') }}</td>
+            <td>{{ h.user_id }}</td>
+            <td>
+                {% if h.event_type == 'tutorial_view' %}📖 教程
+                {% elif h.event_type == 'page_view' %}🌐 页面
+                {% elif h.event_type == 'resource_click' %}🔗 资源
+                {% elif h.event_type == 'prompt_view' %}💡 提示词
+                {% else %}{{ h.event_type }}{% endif %}
+            </td>
+            <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ h.event_label or h.event_key or '-' }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><i class="fa-solid fa-history"></i>暂无浏览记录</div>
+    {% endif %}
 </div>
 
 <div class="card">
