@@ -1812,8 +1812,8 @@ function initCodeBlocks(root) {
                 return;
             }
 
-            // 只有明确的 Mplus/R/SPSS 关键字才能触发代码模式
-            if (/^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES|USEVARIABLE|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|INPUT)\s*[:;]/i.test(text)) {
+            // Mplus 关键字触发：支持冒号分号或 ARE 语法（如 NAMES ARE, USEVARIABLES ARE）
+            if (/^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES?|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|INPUT|MODEL CONSTRAINT|MODEL INDIRECT)\s*([:;]|\bARE\b|\bIS\b)/i.test(text)) {
                 if (!inCode) {
                     if (currentGroup.length) codeGroups.push(currentGroup);
                     currentGroup = [];
@@ -1845,8 +1845,8 @@ function initCodeBlocks(root) {
                 t = t.replace(/<[^>]+>/g, '');
                 return t;
             }).join('\n');
-            // 最终验证：必须含 Mplus/R/SPSS 特征
-            if (!/(TITLE|DATA|VARIABLE|MODEL|ANALYSIS|OUTPUT|SAVEDATA|library\(|ggplot|REGRESSION|FREQUENCIES)\s*[:;]/i.test(codeText)) return;
+            // 最终验证：必须含 Mplus/R/SPSS 特征关键字
+            if (!/(TITLE|DATA|VARIABLE|NAMES|MODEL|ANALYSIS|OUTPUT|SAVEDATA|MISSING|USEVARIABLES?|CLASSES|library\(|ggplot|REGRESSION|FREQUENCIES)/i.test(codeText)) return;
             var pre = document.createElement('pre');
             pre.innerHTML = '<code>' + escapeHtml(codeText) + '</code>';
             group[0].parentNode.insertBefore(pre, group[0]);
