@@ -1147,7 +1147,7 @@ function performSearch() {
                     }
                 } else {
                     if (r.url && r.url !== '#') {
-                        clickHandler = "onclick=\"var m=document.getElementById('resource-modal');if(m){showResourceModal('" + esc(r.title) + "','" + esc(r.desc || '暂无简介') + "','" + esc(r.url) + "')}else{window.open('" + esc(r.url) + "','_blank')}\"";
+                        clickHandler = "onclick=\"var m=document.getElementById('resource-modal');if(m){showResourceModal('" + esc(r.title) + "','" + esc(r.url) + "')}else{window.open('" + esc(r.url) + "','_blank')}\"";
                     } else {
                         clickHandler = "onclick=\"window.location.href='resources.html'\"";
                     }
@@ -1503,7 +1503,7 @@ function loadResources() {
                     const name = item.name.replace(/'/g, "\\'");
                     const desc = (item.description || '').replace(/'/g, "\\'");
                     const url = (item.link_value || '#').replace(/'/g, "\\'");
-                    return '<li><a href="#" onclick="showResourceModal(\'' + name + '\',\'' + desc + '\',\'' + url + '\');return false"><i class="fa-solid fa-caret-right"></i> ' + item.name + '</a></li>';
+                    return '<li><a href="#" onclick="showResourceModal(\'' + name + '\',\'' + url + '\');return false"><i class="fa-solid fa-caret-right"></i> ' + item.name + '</a></li>';
                 }).join('');
             });
         })
@@ -1511,6 +1511,13 @@ function loadResources() {
 }
 
 function showResourceModal(name, description, url) {
+    // 兼容2参数调用：showResourceModal(name, url)
+    if (arguments.length === 2 || (description && description.startsWith('http'))) {
+        url = description;
+        description = findResourceDesc(name);
+    }
+    if (!url || url === '#') return;
+
     const modal = document.getElementById('resource-modal');
     if (!modal) return;
     document.getElementById('resource-modal-title').textContent = name;
@@ -1521,6 +1528,18 @@ function showResourceModal(name, description, url) {
     modal.classList.add('visible');
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+}
+
+function findResourceDesc(name) {
+    if (!cachedResources) return '';
+    for (var mod in cachedResources) {
+        if (!cachedResources.hasOwnProperty(mod)) continue;
+        var items = cachedResources[mod];
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].name === name) return items[i].description || '';
+        }
+    }
+    return '';
 }
 
 function closeResourceModal() {
