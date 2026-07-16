@@ -1521,7 +1521,17 @@ function showResourceModal(name, description, url) {
     const modal = document.getElementById('resource-modal');
     if (!modal) return;
     document.getElementById('resource-modal-title').textContent = name;
-    document.getElementById('resource-modal-desc').textContent = description || '暂无简介';
+
+    // 美化描述：每行换行 + 兼容单行无格式的描述
+    var descHtml = '';
+    var lines = (description || '暂无简介').split('\n');
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+        descHtml += '<span class="rm-desc-line">' + line + '</span>';
+    }
+    document.getElementById('resource-modal-desc').innerHTML = descHtml;
+
     const btn = document.getElementById('resource-modal-btn');
     btn.href = url;
     btn.style.display = url && url !== '#' ? 'inline-flex' : 'none';

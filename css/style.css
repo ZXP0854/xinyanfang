@@ -2564,6 +2564,15 @@ footer {
     color: var(--body);
     line-height: 1.7;
     margin-bottom: 1.5rem;
+    text-align: left;
+}
+.rm-desc-line {
+    display: block;
+    margin-bottom: 0.5rem;
+    padding-left: 0;
+}
+.rm-desc-line:last-child {
+    margin-bottom: 0;
 }
 .resource-modal-btn {
     display: inline-flex;
