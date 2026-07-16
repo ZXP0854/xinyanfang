@@ -361,12 +361,14 @@ function renderDetail(nodeId) {
             // 始终用结构化布局，API内容放入"视频及图文教程"区域
             detailDiv.innerHTML = buildWorkflowDetailHtml(node.id, node.name, tutorialHtml);
             fixPdfEmbeds();
+            initCodeBlocks(detailDiv);
             attachImageModalHandlers();
         })
         .catch(function() {
             // 网络错误 → 降级
             detailDiv.innerHTML = buildWorkflowDetailHtml(node.id, node.name, '');
             fixPdfEmbeds();
+            initCodeBlocks(detailDiv);
             attachImageModalHandlers();
         });
 }
@@ -1776,4 +1778,72 @@ function initPromptCopyTracking() {
             trackStatsEvent('prompt_copy', label);
         }, 500);
     });
+}
+
+// ─── 代码块 + 复制按钮 ───
+function initCodeBlocks(root) {
+    root = root || document;
+    var pres = root.querySelectorAll('pre');
+    pres.forEach(function(pre) {
+        if (pre.closest('.code-block')) return; // 已处理则跳过
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'code-block';
+
+        var header = document.createElement('div');
+        header.className = 'code-block__header';
+
+        var label = document.createElement('span');
+        label.className = 'code-block__label';
+        label.innerHTML = '<i class="fa-solid fa-code"></i> 代码';
+
+        var copyBtn = document.createElement('button');
+        copyBtn.className = 'code-block__copy';
+        copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+        copyBtn.addEventListener('click', function() {
+            var codeEl = wrapper.querySelector('code') || wrapper.querySelector('pre');
+            var text = (codeEl ? codeEl.textContent : '').trim();
+            if (!text) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    copyBtn.classList.add('copied');
+                    copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                    setTimeout(function() {
+                        copyBtn.classList.remove('copied');
+                        copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                    }, 2000);
+                }).catch(function() {
+                    fallbackCopy(text, copyBtn);
+                });
+            } else {
+                fallbackCopy(text, copyBtn);
+            }
+        });
+
+        header.appendChild(label);
+        header.appendChild(copyBtn);
+        wrapper.appendChild(header);
+        pre.parentNode.insertBefore(wrapper, pre);
+        wrapper.appendChild(pre);
+    });
+
+    function fallbackCopy(text, btn) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            btn.classList.add('copied');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+            setTimeout(function() {
+                btn.classList.remove('copied');
+                btn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+            }, 2000);
+        } catch(e) {}
+        document.body.removeChild(ta);
+    }
 }
