@@ -450,16 +450,24 @@ def _search_local(keyword):
 
 
 def _split_keywords(text):
-    """从搜索文本中提取关键词：去除常见疑问词后按停用词拆分"""
-    stop = set('什么是怎样如何怎么的了吗呢啊呀为什么因为是否可以')
-    # 先去掉问号
-    for ch in '？?！!，,。. ':
-        text = text.replace(ch, ' ')
-    words = [w for w in text.split() if len(w) >= 2 and w not in stop]
-    if not words:
-        # 中文2-gram回退
-        words = [text[i:i+2] for i in range(0, len(text)-1, 2)]
-    return list(dict.fromkeys(words))  # 去重保序
+    """中文搜索分词：去除无意义字符后生成2-4字n-gram"""
+    junk = set('？?！!，,。. 的了吗呢啊呀为什么因为是否可以怎样如何什么是')
+    # 保留有意义的连续字符
+    clean = ''
+    for ch in text:
+        if ch not in junk and not ch.isascii():
+            clean += ch
+    if not clean:
+        return [text]
+
+    # 生成2-4字候选词，优先长词
+    words = []
+    for size in (4, 3, 2):
+        for i in range(len(clean) - size + 1):
+            w = clean[i:i+size]
+            if w not in words:
+                words.append(w)
+    return words[:10]  # 最多10个候选词
 
 
 def _search_tutorials(kw, results, seen):
