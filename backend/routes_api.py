@@ -244,7 +244,7 @@ def get_hot_search_terms():
         r = Resource.query.filter_by(name=key, is_published=True).first()
         if r:
             name = r.name
-        if len(name) > 16: name = name[:16] + '…'
+        # 不截断，完整标题作为搜索词
         result.append({'term': name, 'count': cnt})
         if len(result) >= limit: break
 
