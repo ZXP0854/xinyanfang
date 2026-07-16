@@ -1788,7 +1788,8 @@ function initCodeBlocks(root) {
     var pres = root.querySelectorAll('pre');
     pres.forEach(function(pre) {
         if (pre.closest('.code-block')) return;
-        wrapCodeBlock(pre);
+        var codeText = (pre.textContent || '').trim();
+        wrapCodeBlock(pre, detectCodeLabel(codeText));
     });
 
     // 2. 检测 <p> 标签中的代码内容（Mplus语法 / R代码 / SPSS语法等）
@@ -1818,10 +1819,15 @@ function initCodeBlocks(root) {
             var isMplusSection = /^%\w+%/.test(text);
 
             if (isStrongKeyword) {
-                // 强信号：开始新代码块
-                if (currentGroup.length) codeGroups.push(currentGroup);
-                currentGroup = [p];
-                inCodeBlock = true;
+                if (inCodeBlock) {
+                    // 已在代码块内 → 同一段完整代码，继续追加
+                    currentGroup.push(p);
+                } else {
+                    // 开始新代码块
+                    if (currentGroup.length) codeGroups.push(currentGroup);
+                    currentGroup = [p];
+                    inCodeBlock = true;
+                }
             } else if (isMplusSection) {
                 // %OVERALL% 等标记 → 代码块继续
                 if (inCodeBlock && currentGroup.length) currentGroup.push(p);
@@ -1872,9 +1878,28 @@ function initCodeBlocks(root) {
             pre.innerHTML = '<code>' + escapeHtml(codeText) + '</code>';
             group[0].parentNode.insertBefore(pre, group[0]);
             group.forEach(function(p) { p.parentNode.removeChild(p); });
-            wrapCodeBlock(pre);
+            wrapCodeBlock(pre, detectCodeLabel(codeText));
         });
     });
+
+    function detectCodeLabel(codeText) {
+        var lines = codeText.split('\n').filter(function(l) { return l.trim(); });
+        if (!lines.length) return '代码';
+        var first = lines[0].replace(/^[\s!>-]+/, '').trim();
+        // Mplus 关键段识别
+        if (/^TITLE\s*:/i.test(first)) return 'Mplus语法 — ' + first.replace(/^TITLE\s*:\s*/i, '');
+        if (/^\w+:/i.test(first)) {
+            var keyword = first.replace(/[:;].*$/, '').trim();
+            return 'Mplus语法 — ' + keyword.toUpperCase() + ' 段';
+        }
+        // R 代码
+        if (/\b(library|install\.packages|ggplot|dplyr|tidyverse|lavaan|lm\()/i.test(codeText)) return 'R语言代码';
+        // SPSS 语法
+        if (/\b(REGRESSION|FREQUENCIES|T-TEST|ANOVA|FACTOR|RELIABILITY)\b/i.test(codeText)) return 'SPSS语法';
+        // 通用
+        if (/;/i.test(codeText.substring(0, 100))) return '统计代码';
+        return '代码';
+    }
 
     function isCodeLine(text) {
         if (!text) return false;
@@ -1903,7 +1928,7 @@ function initCodeBlocks(root) {
         return false;
     }
 
-    function wrapCodeBlock(codeEl) {
+    function wrapCodeBlock(codeEl, labelText) {
         var wrapper = document.createElement('div');
         wrapper.className = 'code-block';
 
@@ -1912,7 +1937,8 @@ function initCodeBlocks(root) {
 
         var label = document.createElement('span');
         label.className = 'code-block__label';
-        label.innerHTML = '<i class="fa-solid fa-code"></i> 代码';
+        labelText = labelText || '代码';
+        label.innerHTML = '<i class="fa-solid fa-code"></i> ' + escapeHtml(labelText);
 
         var copyBtn = document.createElement('button');
         copyBtn.className = 'code-block__copy';
