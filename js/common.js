@@ -1171,14 +1171,40 @@ function highlightMatch(text, keyword) {
 
 function openSearchOverlay() {
     var overlay = document.getElementById('searchOverlay');
+    if (!overlay) { initSearchOverlay(); overlay = document.getElementById('searchOverlay'); }
     if (!overlay) return;
+
+    // 每次打开重新随机推荐搜索词
+    var recPool = ['Zotero文献管理', 'SPSS数据清洗', 'Mplus语句', '样本量规划',
+                   '中介分析', '量表选择', '实验设计', '知情同意书',
+                   '文献综述', '共同方法偏差', '模型分析方法', '变量关系梳理',
+                   '数据呈现方式', '研究前沿选题', '取样方法', '伦理规范',
+                   '信效度检验', '效度检验', '调节效应', '交叉滞后模型'];
+    var shuffled = recPool.sort(function() { return Math.random() - 0.5; });
+    var recs = shuffled.slice(0, 8);
+    var recList = overlay.querySelector('.search-rec-list');
+    if (recList) {
+        recList.innerHTML = recs.map(function(r) {
+            return '<button type="button" class="search-rec-term" data-term="' + r + '">' + r + '</button>';
+        }).join('');
+        recList.querySelectorAll('.search-rec-term').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var term = btn.getAttribute('data-term') || '';
+                document.getElementById('searchInputBig').value = term;
+                document.getElementById('searchInput').value = term;
+                performSearchBig();
+            });
+        });
+    }
+
     overlay.classList.add('visible');
     document.body.classList.add('search-open');
     loadHotSearchTerms();  // 每次打开刷新热搜
     setTimeout(function() {
-        var input = document.getElementById('searchInput');
-        if (input) input.focus();
-    }, 100);
+        var bigInput = document.getElementById('searchInputBig');
+        if (bigInput) bigInput.focus();
+    }, 150);
 }
 
 function closeSearchOverlay() {
@@ -1186,21 +1212,30 @@ function closeSearchOverlay() {
     if (!overlay) return;
     overlay.classList.remove('visible');
     document.body.classList.remove('search-open');
-    var input = document.getElementById('searchInput');
+    var navInput = document.getElementById('searchInput');
+    var bigInput = document.getElementById('searchInputBig');
     var results = document.getElementById('searchResults');
-    if (input) input.value = '';
+    var sug = document.getElementById('searchSuggestions');
+    if (navInput) navInput.value = '';
+    if (bigInput) bigInput.value = '';
     if (results) { results.innerHTML = ''; results.classList.remove('has-results'); }
+    if (sug) sug.style.display = '';
 }
 
 function handleSearch() {
-    var input = document.getElementById('searchInput');
-    if (!input) return;
+    var navInput = document.getElementById('searchInput');
+    if (!navInput) return;
     var overlay = document.getElementById('searchOverlay');
     if (!overlay || !overlay.classList.contains('visible')) {
         openSearchOverlay();
         return;
     }
-    if (input.value.trim()) performSearch();
+    // 同步到大输入框并执行搜索
+    var bigInput = document.getElementById('searchInputBig');
+    if (bigInput && navInput.value.trim()) {
+        bigInput.value = navInput.value;
+        performSearchBig();
+    }
 }
 
 function loadHotSearchTerms() {
@@ -1320,6 +1355,21 @@ function initSearchOverlay() {
     loadHotSearchTerms();
 }
 
+function getSearchDesc(item, keyword) {
+    var desc = item.desc || '';
+    var kw = keyword.toLowerCase();
+    // 如果描述中已含关键词，直接用描述
+    if (desc.toLowerCase().indexOf(kw) !== -1) return desc;
+    // 从全文提取含关键词的片段
+    var ft = item.fullText || '';
+    if (ft.toLowerCase().indexOf(kw) === -1) return desc;
+    var idx = ft.toLowerCase().indexOf(kw);
+    var start = Math.max(0, idx - 40);
+    var end = Math.min(ft.length, idx + kw.length + 60);
+    var snip = (start > 0 ? '…' : '') + ft.substring(start, end) + (end < ft.length ? '…' : '');
+    return snip.replace(kw, '<!--kw-->' + kw + '<!--/kw-->').replace(/<!--kw-->/g, '<mark>').replace(/<!--\\/kw-->/g, '</mark>');
+}
+
 function performSearchBig() {
     var bigInput = document.getElementById('searchInputBig');
     var results = document.getElementById('searchResults');
@@ -1358,10 +1408,11 @@ function performSearchBig() {
                 var tag = r.type === 'workflow' ? '第' + r.stage + '阶段' : r.tag || r.module || '';
                 var target = r.type === 'workflow' ? r.id : r.type === 'card' ? (r.tutorialTitle || '') : (r.url || '');
                 var typeLabel = r.type === 'workflow' ? 'flow' : r.type === 'card' ? 'aes' : 'res';
+                var desc = getSearchDesc(r, keyword);
                 html += '<div class=\"search-result-item\" data-type=\"' + typeLabel + '\" data-target=\"' + target + '\">' +
                     '<div class=\"sr-icon\"><i class=\"fa-solid fa-' + icon + '\"></i></div>' +
                     '<div class=\"sr-body\"><div class=\"sr-title\">' + highlightMatch(r.title, keyword) + '</div>' +
-                    '<div class=\"sr-desc\">' + highlightMatch(r.desc || '', keyword) + '</div></div>' +
+                    '<div class=\"sr-desc\">' + highlightMatch(desc, keyword) + '</div></div>' +
                     (tag ? '<span class=\"sr-tag\">' + tag + '</span>' : '') + '</div>';
             });
         }
