@@ -1795,7 +1795,12 @@ function initCodeBlocks(root) {
     });
 
     // 2. 自动检测 Mplus <p> 标签代码
-    var areas = root.querySelectorAll("#article-body, .workflow-section-html");
+    var areas = [];
+    root.querySelectorAll("#article-body, .workflow-section-html").forEach(function(a) { areas.push(a); });
+    // root 自身也可能是目标区域（如 tutorial.html 传入 #article-body）
+    if (root !== document && (root.id === "article-body" || root.classList.contains("workflow-section-html"))) {
+        areas.push(root);
+    }
     areas.forEach(function(area) {
         var allP = area.querySelectorAll("p");
         var groups = [], cur = [], inBlock = false;
