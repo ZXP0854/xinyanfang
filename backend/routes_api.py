@@ -193,7 +193,21 @@ def get_hot_search_terms():
         .group_by(SiteStat.event_key)
         .all()
     )
-    # 3. 统计页面浏览（排除 path-like keys）
+    # 3. 统计搜索关键词（page_view 中以 "搜索:" 开头的）
+    search_hits = (
+        db.session.query(
+            SiteStat.event_key,
+            func.count(SiteStat.id).label('cnt')
+        )
+        .filter(
+            SiteStat.event_type == 'page_view',
+            SiteStat.event_key.like('搜索:%'),
+            SiteStat.created_at >= since
+        )
+        .group_by(SiteStat.event_key)
+        .all()
+    )
+    # 4. 统计一般页面浏览
     page_hits = (
         db.session.query(
             SiteStat.event_key,
@@ -203,16 +217,21 @@ def get_hot_search_terms():
             SiteStat.event_type == 'page_view',
             SiteStat.event_key != '',
             SiteStat.event_key.notlike('/%'),
+            SiteStat.event_key.notlike('搜索:%'),
             SiteStat.created_at >= since
         )
         .group_by(SiteStat.event_key)
         .all()
     )
 
-    # 合并计数
+    # 合并计数（搜索词去掉"搜索:"前缀）
     for key, cnt in tutorial_hits + resource_hits + page_hits:
         if not key: continue
         hot[key] = hot.get(key, 0) + cnt
+    for key, cnt in search_hits:
+        if not key: continue
+        term = key.replace('搜索:', '', 1)
+        hot[term] = hot.get(term, 0) + cnt
 
     # 解析名称：node_id → 教程标题（仅返回有真实搜索数据的）
     result = []

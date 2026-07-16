@@ -1140,6 +1140,7 @@ function performSearch() {
             });
         });
     }
+    trackStatsEvent('page_view', '搜索:' + keyword);  // 记录搜索行为
     results.classList.add('has-results');
 }
 
@@ -1157,6 +1158,7 @@ function openSearchOverlay() {
     if (!overlay) return;
     overlay.classList.add('visible');
     document.body.classList.add('search-open');
+    loadHotSearchTerms();  // 每次打开刷新热搜
     setTimeout(function() {
         var input = document.getElementById('searchInput');
         if (input) input.focus();
@@ -1357,6 +1359,7 @@ function performSearchBig() {
             });
         });
     }
+    trackStatsEvent('page_view', '搜索:' + keyword);
     results.classList.add('has-results');
 }
 
