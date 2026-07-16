@@ -1799,27 +1799,75 @@ function initCodeBlocks(root) {
         var allP = container.querySelectorAll('p');
         var codeGroups = [];
         var currentGroup = [];
+        var inCodeBlock = false;
+        var prevCodeLike = false;
 
         allP.forEach(function(p) {
             if (p.closest('.code-block')) return;
             var text = p.textContent.trim();
             if (!text) {
-                // 空行不中断代码组（Mplus代码中常有空行分隔段落）
-                if (currentGroup.length) currentGroup.push(p);
+                if (inCodeBlock && currentGroup.length) currentGroup.push(p);
                 return;
             }
-            if (isCodeLine(text)) {
+
+            var isStrongKeyword = /^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|TYPE|ESTIMATOR|INPUT)\s*[:;]/i.test(text);
+            var isCodeLike = isCodeLine(text);
+            // Mplus 注释行（! 开头）视为代码
+            var isMplusComment = /^[!]\s/.test(text);
+            // Mplus 段落标记
+            var isMplusSection = /^%\w+%/.test(text);
+
+            if (isStrongKeyword) {
+                // 强信号：开始新代码块
+                if (currentGroup.length) codeGroups.push(currentGroup);
+                currentGroup = [p];
+                inCodeBlock = true;
+            } else if (isMplusSection) {
+                // %OVERALL% 等标记 → 代码块继续
+                if (inCodeBlock && currentGroup.length) currentGroup.push(p);
+            } else if (inCodeBlock && (isCodeLike || isMplusComment)) {
+                // 在代码块内，继续
                 currentGroup.push(p);
+            } else if (inCodeBlock && !isCodeLike && !isMplusComment && text.replace(/\s/g,'').length < 150) {
+                // 代码块内，短行可能仍是代码（如模型语句 i with s;）
+                currentGroup.push(p);
+            } else if (inCodeBlock) {
+                // 碰到长文本/中文 → 结束代码块
+                codeGroups.push(currentGroup);
+                currentGroup = [];
+                inCodeBlock = false;
+                if (isCodeLike) {
+                    currentGroup = [p];
+                    inCodeBlock = true;
+                }
+            } else if (isCodeLike) {
+                // 孤立代码行 → 等待确认（连续出现才成块）
+                if (prevCodeLike && currentGroup.length) {
+                    currentGroup.push(p);
+                    if (currentGroup.length >= 2) inCodeBlock = true;
+                } else {
+                    if (currentGroup.length) currentGroup = [];
+                    currentGroup = [p];
+                }
             } else {
+                // 非代码行
                 if (currentGroup.length) { codeGroups.push(currentGroup); currentGroup = []; }
+                inCodeBlock = false;
             }
+            prevCodeLike = isCodeLike;
         });
         if (currentGroup.length) codeGroups.push(currentGroup);
 
         // 包装代码组（至少2行才算代码块）
         codeGroups.forEach(function(group) {
             if (group.length < 2) return;
-            var codeText = group.map(function(p) { return p.textContent; }).join('\n');
+            var codeText = group.map(function(p) {
+                var t = p.innerHTML;
+                // <br /> 转为换行，再去除标签
+                t = t.replace(/<br\s*\/?>/gi, '\n');
+                t = t.replace(/<[^>]+>/g, '');
+                return t;
+            }).join('\n');
             var pre = document.createElement('pre');
             pre.innerHTML = '<code>' + escapeHtml(codeText) + '</code>';
             group[0].parentNode.insertBefore(pre, group[0]);
@@ -1830,18 +1878,28 @@ function initCodeBlocks(root) {
 
     function isCodeLine(text) {
         if (!text) return false;
-        // 纯数字/变量名/标识符续行
+        // Mplus 注释
+        if (/^[!]\s/.test(text)) return true;
+        // Mplus 段落标记 %OVERALL% 等
+        if (/^%\w+%/.test(text)) return true;
+        // 纯数字/变量名/标识符续行（class_1 class_2 class_3 等）
         if (/^[\s]*[\w._\d-]+( [\w._\d-]+)*[\s;]*$/.test(text) && text.length < 120) return true;
         // Mplus/R/SPSS 关键字开头
-        if (/^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|FILE|TYPE|ESTIMATOR|IDVARIABLE|CLUSTER|WITHIN|BETWEEN|AUXILIARY|WEIGHT|STRATIFICATION)\b[ :;]/i.test(text)) return true;
-        // 全大写标识符开头（如 DATA: 或 MODEL:）
+        if (/^(TITLE|DATA|VARIABLE|NAMES|MISSING|USEVARIABLES|USEVARIABLE|MODEL|ANALYSIS|OUTPUT|CLASSES|SAVEDATA|DEFINE|TYPE|ESTIMATOR|IDVARIABLE|CLUSTER|WITHIN|BETWEEN|AUXILIARY|WEIGHT|STRATIFICATION|STARTS|STITERATIONS|PROCESSORS|MODEL INDIRECT)\s*[:;]/i.test(text)) return true;
+        // Mplus 特殊语法：潜变量定义 BY, ON, WITH, IND
+        if (/\b(BY|ON|WITH|IND)\b/i.test(text) && text.length < 120) return true;
+        // 含 @ 符号的 Mplus 时间/参数语法
+        if (/@\d/.test(text) && text.length < 150) return true;
+        // 全大写标识符开头
         if (/^[\s]*[A-Z][A-Z ]{2,}[ :;]/.test(text) && text.length < 120) return true;
         // 分号结尾的短行
         if (/[;]$/.test(text) && text.length < 120) return true;
-        // 缩进开头 + 短行 = 代码续行
+        // 缩进开头 + 短行
         if (/^[\s]{2,}[A-Za-z]/.test(text) && text.length < 150) return true;
-        // MODEL/ANALYSIS/OUTPUT 开头（不区分大小写）
-        if (/^(MODEL |ANALYSIS |OUTPUT )/i.test(text)) return true;
+        // 含赋值或运算符的短行
+        if (/[=~]\s/.test(text) && text.length < 150) return true;
+        // Mplus 增长模型语法 i s | ... @
+        if (/\|\s/.test(text) && text.length < 150) return true;
         return false;
     }
 
