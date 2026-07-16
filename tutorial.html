@@ -66,7 +66,7 @@
     </div>
 </div>
 
-<script src="js/common.js?v=47"></script>
+<script src="js/common.js?v=48"></script>
 <script>
 (function() {
     var urlParams = new URLSearchParams(window.location.search);
@@ -129,7 +129,6 @@
 
         document.getElementById('article-body').innerHTML = html;
         fixPdfEmbeds();
-        initCodeBlocks(document.getElementById('article-body'));
 
         // 图片点击放大
         [].forEach.call(document.querySelectorAll('.article-body img'), function(img) {
