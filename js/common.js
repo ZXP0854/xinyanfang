@@ -1193,27 +1193,28 @@ function loadHotSearchTerms() {
             updateHotTermsDOM();
         })
         .catch(function() {
-            cachedHotTerms = [
-                {term: 'AI提示词', count: 0}, {term: '样本量规划', count: 0},
-                {term: '数据清洗', count: 0}, {term: '变量关系', count: 0},
-                {term: '交叉滞后模型', count: 0}, {term: 'Zotero', count: 0}
-            ];
+            cachedHotTerms = [];
             updateHotTermsDOM();
         });
 }
 
 function updateHotTermsDOM() {
     var list = document.getElementById('searchHotList');
+    var col = list ? list.closest('.search-col') : null;
     if (!list) return;
-    var terms = cachedHotTerms.slice(0, 8);
+    var terms = (cachedHotTerms || []).filter(function(t) { return t.count > 0; });
     if (!terms.length) {
-        terms = [{term: 'AI提示词', count: 0}, {term: 'Zotero', count: 0}, {term: 'SPSS', count: 0}, {term: 'Mplus', count: 0}];
+        if (col) col.style.display = 'none';
+        list.innerHTML = '';
+        return;
     }
+    if (col) col.style.display = '';
     list.innerHTML = terms.map(function(t, i) {
-        var cnt = t.count > 0 ? '<span class=\"hot-count\">' + t.count + '</span>' : '';
         return '<button type=\"button\" class=\"search-hot-term\" data-term=\"' + t.term + '\">' +
             '<span class=\"hot-rank\">' + (i + 1) + '</span>' +
-            '<span class=\"hot-text\">' + t.term + '</span>' + cnt + '</button>';
+            '<span class=\"hot-text\">' + t.term + '</span>' +
+            '<span class=\"hot-count\">' + t.count + '</span>' +
+            '</button>';
     }).join('');
 
     list.querySelectorAll('.search-hot-term').forEach(function(btn) {
@@ -1823,7 +1824,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollStack();
     initBlurText();
     initUserPanelShell();
-    initSearchHotPanel();
+    initSearchOverlay();
     loadWorkflowPreface();
     attachImageModalHandlers();  // 确保所有页面的图片弹窗都能关闭
     // 资源弹窗关闭按钮
