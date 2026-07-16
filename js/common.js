@@ -1797,25 +1797,19 @@ function initCodeBlocks(root) {
     tutorialContentAreas.forEach(function(area) { wrapPCodeInArea(area); });
 
     function wrapPCodeInArea(container) {
-        var children = container.children;
+        // 递归获取区域内所有 <p>（代码嵌套在 tutorial-rich > rich-text 等 div 中）
+        var allP = container.querySelectorAll('p');
         var codeGroups = [];
         var currentGroup = [];
         var inCode = false;
 
-        for (var i = 0; i < children.length; i++) {
-            var el = children[i];
-            var tag = el.tagName ? el.tagName.toLowerCase() : '';
-            // 只处理 <p>，跳过视频/图片/div 等
-            if (tag !== 'p') {
-                if (inCode) { codeGroups.push(currentGroup); currentGroup = []; inCode = false; }
-                continue;
-            }
-            if (el.closest('.code-block') || el.closest('table') || el.closest('td')) continue;
+        allP.forEach(function(p) {
+            if (p.closest('.code-block') || p.closest('table') || p.closest('td') || p.closest('.workflow-section-copy')) return;
 
-            var text = (el.textContent || '').trim();
+            var text = (p.textContent || '').trim();
             if (!text) {
-                if (inCode && currentGroup.length) currentGroup.push(el);
-                continue;
+                if (inCode && currentGroup.length) currentGroup.push(p);
+                return;
             }
 
             // 只有明确的 Mplus/R/SPSS 关键字才能触发代码模式
@@ -1825,8 +1819,8 @@ function initCodeBlocks(root) {
                     currentGroup = [];
                     inCode = true;
                 }
-                currentGroup.push(el);
-                continue;
+                currentGroup.push(p);
+                return;
             }
 
             if (inCode) {
@@ -1835,12 +1829,12 @@ function initCodeBlocks(root) {
                     codeGroups.push(currentGroup);
                     currentGroup = [];
                     inCode = false;
-                    continue;
+                    return;
                 }
                 // 代码块内继续
-                currentGroup.push(el);
+                currentGroup.push(p);
             }
-        }
+        });
         if (currentGroup.length) codeGroups.push(currentGroup);
 
         codeGroups.forEach(function(group) {
